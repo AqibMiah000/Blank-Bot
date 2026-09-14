@@ -31,8 +31,6 @@ jobs:
           npx vite build
 
       - name: Build macOS DMG and ZIP
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
         run: npx electron-builder --mac dmg zip --publish never
 
       - name: Upload Release Assets
