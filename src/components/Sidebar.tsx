@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     ...(enableFreebiesSniper
       ? [{ id: 'freebies' as PageId, label: 'Freebies Sniper', icon: Gift, highlight: true }]
       : []),
-    { id: 'captchas' as PageId, label: 'Anti-Bot Engine', icon: ShieldCheck },
+    { id: 'captchas' as PageId, label: 'Captchas', icon: ShieldCheck },
     { id: 'settings' as PageId, label: 'Settings', icon: Settings },
     { id: 'auth' as PageId, label: 'Cloud Sync', icon: Cloud },
   ];
