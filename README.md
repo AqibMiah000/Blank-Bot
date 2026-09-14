@@ -86,12 +86,12 @@ Eliminate external spreadsheet lookups with Blank's in-app financial spread:
 
 ```mermaid
 flowchart TD
-    subgraph UI ["React 19 + Vite Renderer"]
+    subgraph Renderer ["React 19 + Vite Renderer"]
         A[Tasks & Groups] --> B[Mass Multiplier Modal]
         C[Captcha Harvesters] --> D[AYCD AutoSolve Bridge]
         E[AYCD Profile Sync] --> F[Live Freebies Feed]
         MKT[Live Market & TCG Analytics] --> A
-        THM[Theme Dropdown & Custom Studio] --> UI
+        THM[Theme Studio] --> STY[Dynamic CSS Variables]
     end
 
     subgraph Core ["Electron Main Process (Node.js)"]
@@ -109,7 +109,7 @@ flowchart TD
         S[Apple US]
     end
 
-    UI <==> |Typed IPC Bridge| Core
+    Renderer <==> |Typed IPC Bridge| Core
     Core <==> |ISP / Resi Proxies| Targets
 ```
 
