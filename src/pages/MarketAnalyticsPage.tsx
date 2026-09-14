@@ -12,9 +12,18 @@ import {
   Square,
   Copy,
   Check,
+  Trash2,
+  X,
+  Tag,
+  Sparkles,
 } from 'lucide-react';
 import { MarketItem, MarketCategory, Retailer } from '../types';
-import { getMarketAnalytics, MarketMetricsSummary } from '../utils/market-analytics';
+import {
+  getMarketAnalytics,
+  MarketMetricsSummary,
+  saveCustomMarketItem,
+  deleteCustomMarketItem,
+} from '../utils/market-analytics';
 
 interface MarketAnalyticsPageProps {
   onCreateTaskWithItem?: (item: {
@@ -52,6 +61,16 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'profit' | 'roi' | 'price_high' | 'price_low'>('roi');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Custom Item Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [customRetailer, setCustomRetailer] = useState<Retailer>('amazon');
+  const [customIdentifier, setCustomIdentifier] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [customCategory, setCustomCategory] = useState<MarketCategory>('pokemon');
+  const [customSeries, setCustomSeries] = useState('');
+  const [customMsrp, setCustomMsrp] = useState<number | ''>('');
+  const [customMarketPrice, setCustomMarketPrice] = useState<number | ''>('');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +120,36 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleAddCustomItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customIdentifier.trim()) return;
+
+    saveCustomMarketItem({
+      retailer: customRetailer,
+      identifier: customIdentifier.trim(),
+      name: customName.trim() || `Target ${customIdentifier.trim()}`,
+      category: customCategory,
+      setOrSeries: customSeries.trim() || 'Custom Added',
+      msrp: Number(customMsrp) || 0,
+      marketPrice: Number(customMarketPrice) || Number(customMsrp) || 0,
+      demand: 'high',
+    });
+
+    // Reset fields & close
+    setCustomIdentifier('');
+    setCustomName('');
+    setCustomSeries('');
+    setCustomMsrp('');
+    setCustomMarketPrice('');
+    setIsAddModalOpen(false);
+    loadData(false);
+  };
+
+  const handleDeleteCustomItem = (id: string) => {
+    deleteCustomMarketItem(id);
+    loadData(false);
   };
 
   const filteredItems = useMemo(() => {
@@ -155,8 +204,19 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
           </p>
         </div>
 
-        {/* Action Controls: Refresh & Category Dropdown */}
+        {/* Action Controls: Add Custom, Refresh & Category Dropdown */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Add Custom SKU Target Button */}
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="h-8 px-3 bg-brand-500/15 hover:bg-brand-500/25 border border-brand-500/30 text-brand-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+            title="Track any custom SKU or ASIN"
+          >
+            <Plus className="w-3.5 h-3.5 text-brand-400" />
+            <span>Track Custom SKU</span>
+          </button>
+
           {/* Refresh Button */}
           <button
             type="button"
@@ -323,9 +383,16 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
               <div className="space-y-2.5">
                 {/* Header Badges */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-surface-800/70 text-surface-300">
-                    {CATEGORY_LABELS[item.category]}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-surface-800/70 text-surface-300">
+                      {CATEGORY_LABELS[item.category]}
+                    </span>
+                    {item.isCustom && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        Custom
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-1.5">
                     {item.demand === 'ultra_high' && (
@@ -391,21 +458,34 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
                 </div>
               </div>
 
-              {/* Bottom Actions: Identifier & 1-Click Task Creation */}
+              {/* Bottom Actions: Identifier, Delete & 1-Click Task Creation */}
               <div className="pt-2 border-t border-surface-800/60 flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleCopyIdentifier(item.id, item.identifier)}
-                  className="h-7.5 px-2.5 bg-surface-950/80 hover:bg-surface-800/80 border border-surface-800/60 rounded-lg text-[11px] font-mono text-surface-400 hover:text-slate-200 flex items-center gap-1.5 transition-colors"
-                  title="Click to copy identifier"
-                >
-                  {copiedId === item.id ? (
-                    <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                  ) : (
-                    <Copy className="w-3 h-3 text-surface-500 shrink-0" />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyIdentifier(item.id, item.identifier)}
+                    className="h-7.5 px-2.5 bg-surface-950/80 hover:bg-surface-800/80 border border-surface-800/60 rounded-lg text-[11px] font-mono text-surface-400 hover:text-slate-200 flex items-center gap-1.5 transition-colors"
+                    title="Click to copy identifier"
+                  >
+                    {copiedId === item.id ? (
+                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-surface-500 shrink-0" />
+                    )}
+                    <span>{item.identifier}</span>
+                  </button>
+
+                  {item.isCustom && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomItem(item.id)}
+                      className="h-7.5 w-7.5 flex items-center justify-center rounded-lg bg-surface-950/80 hover:bg-rose-500/20 text-surface-500 hover:text-rose-400 border border-surface-800/60 transition-colors shrink-0"
+                      title="Remove custom tracked target"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
-                  <span>{item.identifier}</span>
-                </button>
+                </div>
 
                 <button
                   type="button"
@@ -430,6 +510,156 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
           );
         })}
       </div>
+
+      {/* Track Custom Product Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-900 border border-surface-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in">
+            <div className="flex items-center justify-between pb-2 border-b border-surface-800">
+              <div className="flex items-center space-x-2">
+                <Tag className="w-4 h-4 text-brand-400" />
+                <h3 className="text-sm font-bold text-white tracking-wide">
+                  Track Custom Target by SKU / ASIN
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-surface-800 text-surface-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-surface-400 leading-relaxed">
+              Add any SKU or ASIN from Amazon, Best Buy, Target, or Walmart to monitor its spread and dispatch 1-click checkout tasks.
+            </p>
+
+            <form onSubmit={handleAddCustomItem} className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                    Store / Retailer *
+                  </label>
+                  <select
+                    value={customRetailer}
+                    onChange={(e) => setCustomRetailer(e.target.value as Retailer)}
+                    className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-500/60"
+                  >
+                    <option value="amazon">Amazon US</option>
+                    <option value="bestbuy">Best Buy</option>
+                    <option value="target">Target</option>
+                    <option value="walmart">Walmart</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                    Category *
+                  </label>
+                  <select
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value as MarketCategory)}
+                    className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-500/60"
+                  >
+                    <option value="pokemon">Pokémon TCG</option>
+                    <option value="onepiece">One Piece TCG</option>
+                    <option value="sports">Sports Cards</option>
+                    <option value="gaming">PC Hardware &amp; GPUs</option>
+                    <option value="consoles">Consoles &amp; Tech</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                  Product Identifier (ASIN or SKU) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. B0DF6K9Y9R or 6598712"
+                  value={customIdentifier}
+                  onChange={(e) => setCustomIdentifier(e.target.value)}
+                  className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-brand-500/60"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Prismatic Evolutions Surprise Box"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-500/60"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                  Set or Series (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Scarlet &amp; Violet Special Set"
+                  value={customSeries}
+                  onChange={(e) => setCustomSeries(e.target.value)}
+                  className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-500/60"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                    Retail MSRP ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="29.99"
+                    value={customMsrp}
+                    onChange={(e) => setCustomMsrp(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-brand-500/60"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-1">
+                    Est. Market Value ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="55.00"
+                    value={customMarketPrice}
+                    onChange={(e) => setCustomMarketPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-surface-950 border border-surface-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-brand-500/60"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-xl text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 rounded-xl text-xs font-bold transition-all"
+                >
+                  Add to Live Tracker
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -285,13 +285,19 @@ Blank features a built-in **Live Market & TCG Intelligence Feed** that tracks re
 
 ### Why It's Powerful:
 - **Zero Guesswork**: Instead of constantly switching between eBay completed listings, TCGPlayer market graphs, and StockX to see what products are actually profitable, Blank computes the live secondary market spread and ROI% right inside the application.
-- **Multi-Category Filtering**: Click the **Filter Categories** dropdown to select exactly what you care about:
-  - 🃏 **Pokémon TCG**: High-velocity modern & classic sets (Pokémon 151 Booster Bundles, Prismatic Evolutions ETBs, Crown Zenith).
-  - ⚓ **One Piece Card Game**: Hard-to-find booster boxes (OP-05 Awakening of the New Era, OP-06 Wings of the Captain, PRB-01 Premium Booster).
-  - ⚾ **Sports Cards**: Hobby & Mega boxes (Panini Prizm NFL, Topps Chrome MLB).
-  - 🖥️ **PC Hardware & GPUs**: Enthusiast silicon (NVIDIA RTX 5090 / 5080 Founders Edition, AMD Ryzen 7 9800X3D).
-  - 🎮 **Consoles & Handhelds**: PlayStation 5 Pro 30th Anniversary, Nintendo Switch OLED limited editions.
-- **Manual Instant Refresh Button**: Hit **"↻ Refresh Live Prices"** whenever you want an instant fresh feed without waiting for the automatic 3-minute background cache timer.
+- **Multi-Category Filtering**: Click the **Categories** dropdown to select exactly what you care about:
+  - 🃏 **Pokémon TCG**: High-velocity modern & classic sets (Prismatic Evolutions ETBs & Bundles, Surging Sparks Booster Boxes, Twilight Masquerade, Stellar Crown, Paldean Fates, 151, Crown Zenith Sea & Sky, Evolving Skies).
+  - ⚓ **One Piece Card Game**: Hard-to-find booster boxes (OP-09 The Four Emperors, OP-08 Two Legends, OP-07 500 Years in the Future, OP-06 Wings of the Captain, OP-05, PRB-01 Premium Booster, EB-01).
+  - ⚾ **Sports Cards**: Hobby & Mega boxes (2024 Panini Prizm Football Mega & Blasters, Absolute Football Kaboom chase, Topps Chrome Baseball, Select Basketball).
+  - 🖥️ **PC Hardware & GPUs**: Enthusiast silicon (NVIDIA RTX 5090 / 5080 / 5070 Ti Founders Edition, AMD Ryzen 7 9800X3D, Ryzen 9 9950X3D).
+  - 🎮 **Consoles & Handhelds**: PlayStation 5 Pro 30th Anniversary Bundle, PS5 Pro Standard, PlayStation Portal (30th Anniversary & Midnight Black), Nintendo Switch OLED.
+- **Track Any Custom SKU or ASIN (`[+ Track Custom SKU]`)**:
+  - Want to track a niche set, a specific GPU brand, or a new restock SKU?
+  - Click **"Track Custom SKU"** in the top bar.
+  - Select your retailer (**Amazon, Best Buy, Target, or Walmart**), paste the ASIN/SKU, choose your category, enter the MSRP and estimated resale value, and click **"Add to Live Tracker"**.
+  - Your custom target appears instantly at the top of your feed with a `CUSTOM` badge, full profit analytics, and 1-Click Task Creation!
+  - Delete any custom target anytime with the trash icon.
+- **Manual Instant Refresh Button**: Hit **"↻ Refresh"** whenever you want an instant fresh quote feed without waiting for the automatic 3-minute background cache timer.
 - **1-Click Task Creation (`[+ Create Task]`)**: See a high-ROI item you want to cop? Click **"Create Task"** on that product card. Blank automatically provisions a task for that retailer and SKU/ASIN, assigns it to your task group, logs the estimated profit spread, and takes you directly to the Tasks dashboard ready to run!
 - **Toggleable in Settings**: Prefer a stripped-down UI? You can toggle the Market Analytics tab on or off anytime in **Settings → Modules & Navigation Tabs**.
 

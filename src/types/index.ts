@@ -206,6 +206,7 @@ export interface MarketItem {
   demand: 'ultra_high' | 'high' | 'moderate';
   lastUpdated: number;
   notes?: string;
+  isCustom?: boolean;
 }
 
 export interface AppSettings {
