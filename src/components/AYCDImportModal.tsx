@@ -162,9 +162,6 @@ export const AYCDImportModal: React.FC<AYCDImportModalProps> = ({
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <span>AYCD Profile Builder Synchronization</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300">
-                  1:1 Refract Native
-                </span>
               </h2>
               <p className="text-xs text-surface-400">
                 Bidirectional import &amp; export with AYCD Toolbox (JSON &amp; CSV).
