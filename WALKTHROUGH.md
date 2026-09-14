@@ -19,7 +19,7 @@
 10. [The Freebies & Pricing Glitch Sniper](#10-the-freebies--pricing-glitch-sniper)
 11. [Live Market & TCG Intelligence Feed](#11-live-market--tcg-intelligence-feed)
 12. [Address Jigging & Virtual Credit Cards (VCCs)](#12-address-jigging--virtual-credit-cards-vccs)
-13. [Sound Packs & Discord Remote Control](#13-sound-packs--discord-remote-control)
+13. [Sound Packs, 17 Stealth Themes & Custom Studio](#13-sound-packs-17-stealth-themes--custom-studio)
 14. [Troubleshooting & Error Code Glossary](#14-troubleshooting--error-code-glossary)
 15. [Frequently Asked Questions (FAQ)](#15-frequently-asked-questions-faq)
 
@@ -325,7 +325,7 @@ Assign a different VCC to each profile in Blank so your transactions are never l
 
 ---
 
-## 13. Sound Packs & Discord Remote Control
+## 13. Sound Packs, 17 Stealth Themes & Custom Studio
 
 ### 6 Real-Time Synthesized Sound Packs
 Blank doesn't rely on external `.wav` files that can get lost or deleted. It synthesizes audio in real-time:
@@ -337,6 +337,16 @@ Blank doesn't rely on external `.wav` files that can get lost or deleted. It syn
 6. **Mute Audio**: Silent stealth operation.
 
 Preview and choose your favorite in the **Settings** tab!
+
+### 17 Stealth Themes & Custom Palette Studio
+Under **Settings → UI Theme & Stealth Aesthetics**, customize Blank's dark-mode experience:
+- **Searchable Theme Dropdown**: Pick from 17 handcrafted, authentic dark-mode presets (Refract OLED `#000000` pitch black, Stealth Midnight, Obsidian, Carbon Gold, Dracula Neon, Nordic Frost, Cyber Emerald, Crimson Protocol, Titanium Cobalt, Sunset Mirage, Synthwave 80s, Tokyo Cyberpunk, Royal Amethyst, Acid Volt, Phantom Smoke, Matcha Botanical, and Solar Flare).
+- **Custom Theme Studio**:
+  - Enter any hex code for **Primary (Accent)** (e.g. `#00F0FF`).
+  - Enter any hex code for **Secondary (Base Surface)** (e.g. `#050507` or `#000000`).
+  - Or click the circular swatches to pick visually using your computer's native color picker.
+  - Click **"Apply Custom"**: Blank dynamically calculates harmonious surface shades, glow radii, and borders, applying them to the entire app instantly without restarting.
+  - Selecting any preset from the dropdown also synchronizes the hex values into the custom studio so you can easily fine-tune existing themes.
 
 ### Discord Webhook & Mobile Remote Control
 - **Discord Webhooks**: Paste your Discord channel webhook in Settings to receive celebratory embed cards with checkout speed (e.g. `240ms`), masked card, and order numbers.

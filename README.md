@@ -29,7 +29,8 @@
 | :--- | :--- | :---: |
 | **Direct Protocol Checkout** | Sub-second checkout via HTTP/2 and raw TLS client-hello emulation (`got-scraping`). | ✅ Active |
 | **Multi-Retailer Engine** | Native checkout workflows for **Amazon US, Best Buy, Walmart, Target, and Apple**. | ✅ Active |
-| **Live Market & TCG Analytics** | Real-time secondary prices, MSRP profit spreads, ROI%, multi-category filtering & 1-click task provisioning. | ✅ Active |
+| **Live Market & TCG Analytics** | Real-time secondary prices, MSRP profit spreads, ROI%, multi-category filtering, custom SKU tracking & 1-click task provisioning. | ✅ Active |
+| **17 Stealth Themes & Custom Hex Studio** | Searchable theme dropdown with 17 curated stealth presets plus a built-in Custom Theme Studio for arbitrary primary/secondary hex codes. | ✅ Active |
 | **AYCD Toolbox Integration** | 1:1 integration with AYCD AutoSolve (OneClick) & Profile Builder (JSON/CSV bidirectional sync). | ✅ Active |
 | **Mass SKU Multiplier** | Paste 50+ SKUs at once with automatic round-robin profile allocation. | ✅ Active |
 | **Native Captcha Harvesters** | Floating persistent browser windows for Google 0.90 trust score and YouTube warming. | ✅ Active |
@@ -38,7 +39,46 @@
 | **6 Synthesized Sound Packs** | Real-time Web Audio synthesis featuring Refract Cyan, Cyber Laser, Retro 8-bit, and more. | ✅ Active |
 | **Discord Remote Control** | Mobile remote commands (`/start [group]`, `/stop all`, `/status`) and rich embed webhooks. | ✅ Active |
 | **AES-256-GCM Local Vault** | Card numbers (PANs) and credentials are encrypted on your device before disk write. | ✅ Active |
-| **9 Stealth Themes** | Refract OLED (`#000000` pitch black), Stealth Midnight, Cyberpunk, Tokyo Night, etc. | ✅ Active |
+
+---
+
+## 🎨 Themes & Custom Studio
+
+Blank features a completely customizable, true pitch-black OLED aesthetic rivaling top-tier tools like Refract:
+
+### 17 Curated Stealth Presets
+Access all 17 presets via the searchable dropdown in **Settings**:
+- **Refract OLED** (`#00F0FF` / `#000000` - True Pitch Black)
+- **Stealth Midnight** (`#F8FAFC` / `#050507` - Pure Monochrome)
+- **Obsidian Dark** (`#06B6D4` / `#070A10` - Cyan Glow)
+- **Carbon Gold** (`#F59E0B` / `#080806` - Amber / Gold)
+- **Dracula Neon** (`#BD93F9` / `#090611` - Gothic Violet)
+- **Nordic Frost** (`#38BDF8` / `#060A0F` - Arctic Ice Blue)
+- **Cyber Emerald** (`#10B981` / `#030805` - Matrix Green)
+- **Crimson Protocol** (`#F43F5E` / `#090305` - Rose Red)
+- **Titanium Cobalt** (`#3B82F6` / `#050914` - Electric Blue)
+- **Sunset Mirage** (`#F97316` / `#0A0604` - Sunset Amber)
+- **Synthwave 80s** (`#E879F9` / `#0C0410` - Neon Fuchsia)
+- **Tokyo Cyberpunk** (`#FF2A85` / `#0A030B` - Hyper Pink)
+- **Royal Amethyst** (`#A855F7` / `#080410` - Deep Purple)
+- **Acid Volt** (`#A3E635` / `#060903` - Electric Lime)
+- **Phantom Smoke** (`#94A3B8` / `#060709` - Gunmetal Silver)
+- **Matcha Botanical** (`#4ADE80` / `#040A05` - Forest Sage)
+- **Solar Flare** (`#EAB308` / `#090803` - Bright Solar Gold)
+
+### Custom Theme Studio
+Next to the dropdown, enter your own hex codes for **Primary Accent** and **Secondary Base Surface** (or click the swatches to open your system color picker). Blank dynamically calculates matching shades, glows, and surface contrasts, injecting CSS variables immediately without restarting.
+
+---
+
+## 📈 Live Market & TCG Intelligence Feed
+
+Eliminate external spreadsheet lookups with Blank's in-app financial spread:
+- **Instant Spreads**: Side-by-side comparison of **Retail MSRP** and **Secondary Market Resale** with automated profit margins and ROI%.
+- **Top Collections**: Preloaded tracking for high-velocity sets (Pokémon Prismatic Evolutions, Surging Sparks, 151, One Piece OP-09 Emperors, Lorcana, RTX 50-series GPUs, PS5 Pro).
+- **Track Any Custom ASIN or SKU**: Use `+ Track Custom SKU` to monitor any target with custom MSRP/resale estimates and delete them anytime.
+- **1-Click Task Creation**: Click `+ Create Task` directly on any item to instantly provision an automated checkout task with retailer, SKU, and optimal delays.
+- **Manual Cache Refresh**: Click `↻ Refresh` to fetch immediate live updates.
 
 ---
 
@@ -50,6 +90,8 @@ flowchart TD
         A[Tasks & Groups] --> B[Mass Multiplier Modal]
         C[Captcha Harvesters] --> D[AYCD AutoSolve Bridge]
         E[AYCD Profile Sync] --> F[Live Freebies Feed]
+        MKT[Live Market & TCG Analytics] --> A
+        THM[Theme Dropdown & Custom Studio] --> UI
     end
 
     subgraph Core ["Electron Main Process (Node.js)"]
@@ -124,9 +166,9 @@ Blank-Bot/
 ├── src/                   # React 19 Frontend
 │   ├── components/        # Reusable UI widgets, MassTaskModal, Harvesters
 │   ├── context/           # Global application state management
-│   ├── pages/             # Tasks, Proxies, Accounts, Freebies, Captchas, Settings
+│   ├── pages/             # Tasks, Proxies, Accounts, Freebies, Market Analytics, Settings
 │   ├── types/             # TypeScript interfaces & state definitions
-│   └── utils/             # Web Audio real-time synthesizers
+│   └── utils/             # Theme engine, Web Audio synthesizers, market analytics
 ├── WALKTHROUGH.md         # Comprehensive beginner-to-pro guide
 └── package.json           # Dependencies & build scripts
 ```
