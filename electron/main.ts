@@ -1,6 +1,7 @@
 import electron from 'electron';
 const { app, BrowserWindow, ipcMain, Menu, shell, session } = electron;
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { encryptData, decryptData } from './crypto/cipher';
 import { taskEngine } from './engine/task-engine';
@@ -24,13 +25,16 @@ let mainWindow: BrowserWindow | null = null;
 const harvesterWindows = new Map<string, BrowserWindow>();
 
 function createWindow(): void {
+  const iconPath = path.join(__dirname, '../build/icon.png');
+  const hasIcon = fs.existsSync(iconPath);
+
   mainWindow = new BrowserWindow({
     width: 1366,
     height: 850,
     minWidth: 980,
     minHeight: 650,
     title: 'Blank — High-Frequency Retail Automation',
-    icon: path.join(__dirname, '../build/icon.png'),
+    icon: hasIcon ? iconPath : undefined,
     backgroundColor: '#080c14',
     show: false,
     frame: true,
@@ -54,6 +58,13 @@ function createWindow(): void {
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
+
+  // Guarantee window is shown even if ready-to-show was delayed
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+      mainWindow.show();
+    }
+  }, 1000);
 
   // Intercept all window.open / target="_blank" links and route to OS default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -92,14 +103,17 @@ function createWindow(): void {
     }
   });
 
-  const devServerUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
-  if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
-    mainWindow.loadURL(devServerUrl).catch(() => {
-      // Fallback to static if Vite server not yet ready
-      mainWindow?.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
+  const indexPath = path.join(app.getAppPath(), 'dist/index.html');
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL).catch(() => {
+      mainWindow?.loadFile(indexPath);
+    });
+  } else if (!app.isPackaged && process.env.NODE_ENV === 'development') {
+    mainWindow.loadURL('http://localhost:5173').catch(() => {
+      mainWindow?.loadFile(indexPath);
     });
   } else {
-    mainWindow.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
+    mainWindow.loadFile(indexPath);
   }
 
   mainWindow.on('closed', () => {
