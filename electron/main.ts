@@ -1,5 +1,5 @@
 import electron from 'electron';
-const { app, BrowserWindow, ipcMain, Menu, shell } = electron;
+const { app, BrowserWindow, ipcMain, Menu, shell, session } = electron;
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { encryptData, decryptData } from './crypto/cipher';
@@ -20,6 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
+const harvesterWindows = new Map<string, BrowserWindow>();
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -208,6 +209,70 @@ function registerIpcHandlers(): void {
   // Shell External URL Dispatcher
   ipcMain.handle('shell:open-external', async (_, url: string) => {
     return shell.openExternal(url);
+  });
+
+  // Native Captcha Harvester Windows
+  ipcMain.handle('harvester:open', async (_, { id, targetUrl, proxy }: { id: string; targetUrl?: string; proxy?: string }) => {
+    try {
+      if (harvesterWindows.has(id)) {
+        const existing = harvesterWindows.get(id);
+        if (existing && !existing.isDestroyed()) {
+          existing.focus();
+          if (targetUrl) existing.loadURL(targetUrl);
+          return { success: true, message: 'Harvester focused' };
+        }
+      }
+
+      const partitionName = `persist:harvester_${id}`;
+      const sess = session.fromPartition(partitionName);
+
+      if (proxy) {
+        const proxyRule = proxy.includes('://') ? proxy : `http://${proxy}`;
+        await sess.setProxy({ proxyRules: proxyRule });
+      }
+
+      const harvesterWin = new BrowserWindow({
+        width: 480,
+        height: 640,
+        title: `Blank Harvester — Slot #${id}`,
+        backgroundColor: '#0a0a0c',
+        autoHideMenuBar: true,
+        webPreferences: {
+          session: sess,
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+        },
+      });
+
+      harvesterWin.setMenuBarVisibility(false);
+      const initialUrl = targetUrl || 'https://accounts.google.com';
+      await harvesterWin.loadURL(initialUrl);
+
+      harvesterWin.on('closed', () => {
+        harvesterWindows.delete(id);
+      });
+
+      harvesterWindows.set(id, harvesterWin);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Harvester window error:', err);
+      return { success: false, message: err?.message || 'Failed to open harvester' };
+    }
+  });
+
+  ipcMain.handle('harvester:close', async (_, id: string) => {
+    const existing = harvesterWindows.get(id);
+    if (existing && !existing.isDestroyed()) {
+      existing.close();
+      harvesterWindows.delete(id);
+    }
+    return { success: true };
+  });
+
+  ipcMain.handle('harvester:status', async (_, id: string) => {
+    const existing = harvesterWindows.get(id);
+    return { isOpen: !!existing && !existing.isDestroyed() };
   });
 }
 

@@ -80,4 +80,12 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
 
   // Shell External Browser Launcher
   openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),
+
+  // Captcha Harvester Windows
+  openCaptchaHarvester: (options: { id: string; targetUrl?: string; proxy?: string }) =>
+    ipcRenderer.invoke('harvester:open', options),
+  closeCaptchaHarvester: (id: string) =>
+    ipcRenderer.invoke('harvester:close', id),
+  getHarvesterStatus: (id: string) =>
+    ipcRenderer.invoke('harvester:status', id),
 });

@@ -171,12 +171,31 @@ export type ThemeId =
   | 'crimson'
   | 'titanium';
 
+export type SoundPackId =
+  | 'refract_cyan'
+  | 'laser_ping'
+  | 'retro_arcade'
+  | 'sub_thud'
+  | 'mechanical_click'
+  | 'mute';
+
+export interface CaptchaHarvesterSlot {
+  id: string;
+  name: string;
+  target: 'google' | 'youtube' | 'recaptcha' | 'turnstile' | 'hcaptcha';
+  proxy?: string;
+  isOpen: boolean;
+  tokensHarvested: number;
+}
+
 export interface AppSettings {
   theme?: ThemeId;
+  soundPack?: SoundPackId;
   enableFreebiesSniper?: boolean;
   discordWebhookUrl: string;
   discordNotifyOnSuccess: boolean;
   discordNotifyOnDecline: boolean;
+  enableRemoteControl?: boolean;
   playSoundOnSuccess: boolean;
   customSoundPath?: string;
   encryptionPassphrase: string;

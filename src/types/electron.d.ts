@@ -92,6 +92,15 @@ export interface BlankBotAPI {
 
   // External Browser Dispatcher
   openExternal: (url: string) => Promise<void>;
+
+  // Captcha Harvester Windows
+  openCaptchaHarvester: (options: {
+    id: string;
+    targetUrl?: string;
+    proxy?: string;
+  }) => Promise<{ success: boolean; message?: string }>;
+  closeCaptchaHarvester: (id: string) => Promise<{ success: boolean }>;
+  getHarvesterStatus: (id: string) => Promise<{ isOpen: boolean }>;
 }
 
 declare global {

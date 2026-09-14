@@ -13,8 +13,17 @@ import {
   Sliders,
   Gift,
 } from 'lucide-react';
-import { AppSettings, ThemeId } from '../types';
-import { playHighPitchedChime, playFreebieSniperChime } from '../utils/audio';
+import { AppSettings, ThemeId, SoundPackId } from '../types';
+import {
+  playHighPitchedChime,
+  playFreebieSniperChime,
+  playRefractCyanChime,
+  playLaserPing,
+  playRetroArcade,
+  playSubThud,
+  playMechanicalClick,
+  playCheckoutSound,
+} from '../utils/audio';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -32,12 +41,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onImportBackup,
 }) => {
   const [theme, setTheme] = useState<ThemeId>(settings.theme || 'oled');
+  const [soundPack, setSoundPack] = useState<SoundPackId>(settings.soundPack || 'refract_cyan');
   const [enableFreebiesSniper, setEnableFreebiesSniper] = useState(
     settings.enableFreebiesSniper ?? true
   );
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState(settings.discordWebhookUrl || '');
   const [discordNotifyOnSuccess, setDiscordNotifyOnSuccess] = useState(
     settings.discordNotifyOnSuccess ?? true
+  );
+  const [enableRemoteControl, setEnableRemoteControl] = useState(
+    settings.enableRemoteControl ?? false
   );
   const [playSoundOnSuccess, setPlaySoundOnSuccess] = useState(settings.playSoundOnSuccess ?? true);
   const [customSoundPath, setCustomSoundPath] = useState(settings.customSoundPath || '');
@@ -75,9 +88,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       await onSaveSettings({
         ...settings,
         theme,
+        soundPack,
         enableFreebiesSniper,
         discordWebhookUrl: discordWebhookUrl.trim(),
         discordNotifyOnSuccess,
+        enableRemoteControl,
         playSoundOnSuccess,
         customSoundPath: customSoundPath.trim(),
         encryptionPassphrase: encryptionPassphrase.trim(),
@@ -287,39 +302,91 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               Send rich embed confirmations on order placement (includes SKU, masked card, and latency)
             </label>
           </div>
+
+          <div className="p-3 bg-surface-950/80 border border-surface-800 rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-white block">Discord Remote Control Listener</span>
+                <span className="text-[11px] text-surface-400 block">
+                  Listen for incoming Discord commands: <code className="text-brand-300">/start [group]</code>, <code className="text-brand-300">/stop all</code>, <code className="text-brand-300">/status</code>
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={enableRemoteControl}
+                onChange={(e) => setEnableRemoteControl(e.target.checked)}
+                className="w-4 h-4 rounded text-brand-500 accent-brand-500 cursor-pointer ml-3 shrink-0"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Audio Alerts */}
+        {/* Audio Alerts & Sound Packs */}
         <div className="bg-surface-900/60 border border-surface-800/40 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <Volume2 className="w-4 h-4 text-emerald-400" />
-              Audio Alert Engine (Distinct Synthesizers)
+              Audio Alert Engine &amp; Sound Packs
+            </span>
+            <span className="text-[11px] font-mono text-emerald-400 uppercase font-bold">
+              Active: {soundPack}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            {/* Checkout Confirmation Chime */}
-            <div className="p-3.5 rounded-xl bg-surface-950/60 border border-surface-800/40 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-white block">Checkout Confirmation</span>
-                <span className="text-[11px] text-surface-400 block">4-tone high-pitched bell arpeggio</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleTestSound}
-                className="px-2.5 py-1.5 bg-surface-800 hover:bg-surface-700 text-emerald-400 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ml-2"
-              >
-                <Volume2 className="w-3.5 h-3.5" />
-                <span>Test Bell</span>
-              </button>
-            </div>
+          <p className="text-xs text-surface-400">
+            Choose your signature checkout alert synthesized directly in real-time with Web Audio:
+          </p>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            {[
+              { id: 'refract_cyan', name: 'Refract Cyan', desc: 'Crystal C6-D7 arpeggio', play: playRefractCyanChime },
+              { id: 'laser_ping', name: 'Cyber Laser', desc: 'High-voltage laser ping', play: playLaserPing },
+              { id: 'retro_arcade', name: '8-Bit Arcade', desc: 'Nostalgic level-up chime', play: playRetroArcade },
+              { id: 'sub_thud', name: 'Sub-Bass Thud', desc: 'Cinematic deep bass impact', play: playSubThud },
+              { id: 'mechanical_click', name: 'Haptic Click', desc: 'Crisp tactile switch', play: playMechanicalClick },
+              { id: 'mute', name: 'Mute Audio', desc: 'Complete silent stealth mode', play: () => {} },
+            ].map((p) => (
+              <div
+                key={p.id}
+                onClick={() => setSoundPack(p.id as SoundPackId)}
+                className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between ${
+                  soundPack === p.id
+                    ? 'border-emerald-500 bg-surface-850 ring-1 ring-emerald-500/40 shadow-md'
+                    : 'border-surface-800/80 bg-surface-950/60 hover:border-surface-700'
+                }`}
+              >
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>{p.name}</span>
+                    {soundPack === p.id && <CheckCircle className="w-3 h-3 text-emerald-400" />}
+                  </div>
+                  <div className="text-[10px] text-surface-400 font-mono mt-0.5">{p.desc}</div>
+                </div>
+
+                {p.id !== 'mute' && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSoundPack(p.id as SoundPackId);
+                      p.play();
+                    }}
+                    className="p-1.5 bg-surface-800 hover:bg-surface-700 text-emerald-400 rounded-lg text-xs font-semibold ml-2 shrink-0 transition-all"
+                    title="Preview Sound"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             {/* Freebie Sniper Glitch Chime */}
             <div className="p-3.5 rounded-xl bg-surface-950/60 border border-surface-800/40 flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-white block">Freebie Glitch Caught</span>
-                <span className="text-[11px] text-surface-400 block">Unique rapid high-frequency double blip</span>
+                <span className="text-xs font-bold text-white block">Freebie Glitch Notification</span>
+                <span className="text-[11px] text-surface-400 block">Unique high-frequency double blip</span>
               </div>
               <button
                 type="button"
@@ -328,6 +395,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               >
                 <Volume2 className="w-3.5 h-3.5" />
                 <span>Test Blip</span>
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-surface-950/60 border border-surface-800/40 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-white block">Active Checkout Sound</span>
+                <span className="text-[11px] text-surface-400 block">Preview currently active sound pack</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => playCheckoutSound(soundPack)}
+                className="px-2.5 py-1.5 bg-surface-800 hover:bg-surface-700 text-emerald-400 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ml-2"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>Play Sound</span>
               </button>
             </div>
           </div>
@@ -341,7 +423,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               className="w-4 h-4 rounded text-brand-500 accent-brand-500 cursor-pointer"
             />
             <label htmlFor="soundSuccess" className="text-xs text-surface-300 cursor-pointer">
-              Play high-pitched confirmation bell on retail checkout success
+              Play selected sound pack alert on retail checkout confirmation
             </label>
           </div>
 

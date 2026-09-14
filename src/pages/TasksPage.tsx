@@ -10,6 +10,9 @@ import {
   Zap,
   Repeat,
   Folder,
+  Copy,
+  Layers,
+  FileSpreadsheet,
 } from 'lucide-react';
 import {
   TaskItem,
@@ -21,6 +24,7 @@ import {
 } from '../types';
 import { TaskModal } from '../components/TaskModal';
 import { LogStreamModal } from '../components/LogStreamModal';
+import { MassTaskModal } from '../components/MassTaskModal';
 
 interface TasksPageProps {
   tasks: TaskItem[];
@@ -55,6 +59,8 @@ export const TasksPage: React.FC<TasksPageProps> = ({
 }) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>(taskGroups[0]?.id || 'default');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isMassModalOpen, setIsMassModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'running' | 'idle' | 'success' | 'failed'>('all');
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [activeLogTask, setActiveLogTask] = useState<TaskItem | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
@@ -65,6 +71,41 @@ export const TasksPage: React.FC<TasksPageProps> = ({
   const currentGroupTasks = tasks.filter(
     (t) => t.groupId === selectedGroupId || (selectedGroupId === 'all')
   );
+
+  const filteredTasks = currentGroupTasks.filter((t) => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'running')
+      return ['MONITORING', 'QUEUE', 'CARTING', 'CHECKING_OUT', 'WAITING_FOR_DROP', 'WAITING_2FA'].includes(t.status);
+    if (statusFilter === 'idle') return ['IDLE', 'STOPPED'].includes(t.status);
+    if (statusFilter === 'success') return t.status === 'SUCCESS';
+    if (statusFilter === 'failed') return t.status === 'FAILED';
+    return true;
+  });
+
+  const handleDuplicateTask = async (task: TaskItem, multiplier: number = 1) => {
+    for (let i = 0; i < multiplier; i++) {
+      const clone: Partial<TaskItem> = {
+        groupId: task.groupId,
+        retailer: task.retailer,
+        flags: { ...task.flags },
+        input: task.input,
+        profileId: task.profileId,
+        proxyPoolId: task.proxyPoolId,
+        accountId: task.accountId,
+        monitorDelay: task.monitorDelay,
+        retryDelay: task.retryDelay,
+        status: 'IDLE',
+        statusMessage: 'Ready',
+      };
+      await onSaveTask(clone);
+    }
+  };
+
+  const handleMassGenerate = async (taskList: Partial<TaskItem>[]) => {
+    for (const item of taskList) {
+      await onSaveTask(item);
+    }
+  };
 
   const toggleSelectAll = () => {
     if (selectedTaskIds.length === currentGroupTasks.length) {
@@ -223,17 +264,25 @@ export const TasksPage: React.FC<TasksPageProps> = ({
       {/* Main Table Area */}
       <div className="flex-1 flex flex-col bg-surface-950 overflow-hidden">
         {/* Table Top Action Bar */}
-        <div className="p-3 px-6 border-b border-surface-800/80 flex items-center justify-between bg-surface-900/40">
-          <div className="flex items-center space-x-3">
+        <div className="p-3 px-6 border-b border-surface-800/80 flex flex-wrap items-center justify-between gap-3 bg-surface-900/40">
+          <div className="flex items-center space-x-2">
             <button
               onClick={() => {
                 setEditingTask(null);
                 setIsTaskModalOpen(true);
               }}
-              className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md shadow-brand-500/20"
+              className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md shadow-brand-500/20 transition-all"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create Task</span>
+            </button>
+
+            <button
+              onClick={() => setIsMassModalOpen(true)}
+              className="px-3 py-1.5 bg-surface-800 hover:bg-surface-700 text-brand-300 border border-brand-500/30 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+            >
+              <Layers className="w-3.5 h-3.5 text-brand-400" />
+              <span>Quick Import / Paste</span>
             </button>
 
             {selectedTaskIds.length > 0 && (
@@ -255,12 +304,64 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                   <Square className="w-3 h-3 fill-rose-400" />
                   <span>Stop</span>
                 </button>
+                <button
+                  onClick={async () => {
+                    for (const id of selectedTaskIds) {
+                      await onDeleteTask(id);
+                    }
+                    setSelectedTaskIds([]);
+                  }}
+                  className="px-2.5 py-1 bg-surface-800 hover:bg-rose-500/20 text-rose-400 border border-surface-700 rounded-lg text-xs font-semibold flex items-center gap-1"
+                  title="Delete Selected Tasks"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Delete</span>
+                </button>
               </div>
             )}
           </div>
 
-          <div className="text-xs text-surface-500 font-mono">
-            High-Frequency Worker Engine: <span className="text-emerald-400">Ready</span>
+          {/* Filter Pills */}
+          <div className="flex items-center space-x-1.5">
+            {[
+              { id: 'all', label: 'All', count: currentGroupTasks.length },
+              {
+                id: 'running',
+                label: 'Running',
+                count: currentGroupTasks.filter((t) =>
+                  ['MONITORING', 'QUEUE', 'CARTING', 'CHECKING_OUT', 'WAITING_FOR_DROP', 'WAITING_2FA'].includes(t.status)
+                ).length,
+              },
+              {
+                id: 'idle',
+                label: 'Idle',
+                count: currentGroupTasks.filter((t) => ['IDLE', 'STOPPED'].includes(t.status)).length,
+              },
+              {
+                id: 'success',
+                label: 'Success',
+                count: currentGroupTasks.filter((t) => t.status === 'SUCCESS').length,
+              },
+              {
+                id: 'failed',
+                label: 'Failed',
+                count: currentGroupTasks.filter((t) => t.status === 'FAILED').length,
+              },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setStatusFilter(f.id as any)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all flex items-center gap-1 ${
+                  statusFilter === f.id
+                    ? 'bg-surface-800 text-white font-bold border border-surface-700'
+                    : 'text-surface-400 hover:text-white hover:bg-surface-900'
+                }`}
+              >
+                <span>{f.label}</span>
+                <span className="text-[10px] text-surface-500">({f.count})</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -291,14 +392,14 @@ export const TasksPage: React.FC<TasksPageProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-850">
-              {currentGroupTasks.length === 0 ? (
+              {filteredTasks.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center py-16 text-surface-500 font-sans text-xs">
-                    No automation tasks in this folder. Click &quot;Create Task&quot; to begin.
+                    No automation tasks match the active filter. Click &quot;Create Task&quot; or &quot;Quick Import&quot; to begin.
                   </td>
                 </tr>
               ) : (
-                currentGroupTasks.map((task) => {
+                filteredTasks.map((task) => {
                   const isSelected = selectedTaskIds.includes(task.id);
                   const profile = profiles.find((p) => p.id === task.profileId);
                   const proxyPool = proxyPools.find((p) => p.id === task.proxyPoolId);
@@ -354,7 +455,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                           </span>
                         )}
                       </td>
-                      <td className="p-3 text-right pr-6 space-x-1.5">
+                      <td className="p-3 text-right pr-6 space-x-1">
                         {task.status === 'IDLE' || task.status === 'STOPPED' || task.status === 'FAILED' ? (
                           <button
                             onClick={() => onStartTask(task.id)}
@@ -372,6 +473,13 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                             <Square className="w-3.5 h-3.5" />
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDuplicateTask(task, 1)}
+                          className="p-1 rounded bg-surface-800 hover:bg-surface-700 text-brand-400"
+                          title="Duplicate Task (1x)"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => setActiveLogTask(task)}
                           className="p-1 rounded bg-surface-800 hover:bg-surface-700 text-cyan-400"
@@ -419,6 +527,17 @@ export const TasksPage: React.FC<TasksPageProps> = ({
         profiles={profiles}
         proxyPools={proxyPools}
         accounts={accounts}
+      />
+
+      {/* Mass Task Multiplier & Quick Import Modal */}
+      <MassTaskModal
+        isOpen={isMassModalOpen}
+        onClose={() => setIsMassModalOpen(false)}
+        onGenerateTasks={handleMassGenerate}
+        profiles={profiles}
+        proxyPools={proxyPools}
+        accounts={accounts}
+        defaultGroupId={selectedGroupId === 'all' ? (taskGroups[0]?.id || 'default') : selectedGroupId}
       />
 
       {/* Task Console Log Modal */}
