@@ -7,6 +7,7 @@ import { ProfilesPage } from './pages/ProfilesPage';
 import { ProxiesPage } from './pages/ProxiesPage';
 import { AccountsPage } from './pages/AccountsPage';
 import { FreebiesPage } from './pages/FreebiesPage';
+import { MarketAnalyticsPage } from './pages/MarketAnalyticsPage';
 import { CaptchasPage } from './pages/CaptchasPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuthPage } from './pages/AuthPage';
@@ -349,6 +350,67 @@ export const App: React.FC = () => {
     await handleStartTask(newTask.id);
   };
 
+  const handleCreateMarketTask = async (item: {
+    retailer: Retailer;
+    identifier: string;
+    name: string;
+    msrp?: number;
+    marketPrice?: number;
+  }) => {
+    let targetGroup = taskGroups.find((g) => g.retailer === item.retailer);
+    if (!targetGroup) {
+      const retailerNames: Record<Retailer, string> = {
+        target: 'Target Operations',
+        bestbuy: 'Best Buy Hub',
+        walmart: 'Walmart Supercenter',
+        amazon: 'Amazon Direct',
+        apple: 'Apple Store',
+      };
+      const newGroup: TaskGroup = {
+        id: `grp_${Date.now()}`,
+        name: retailerNames[item.retailer] || `${item.retailer.toUpperCase()} Targets`,
+        retailer: item.retailer,
+        createdAt: Date.now(),
+      };
+      await firestoreService.saveTaskGroup(newGroup);
+      setTaskGroups((prev) => [...prev, newGroup]);
+      targetGroup = newGroup;
+    }
+
+    const profitSpread = item.marketPrice && item.msrp ? item.marketPrice - item.msrp : 0;
+    const newTask: TaskItem = {
+      id: 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+      groupId: targetGroup.id,
+      retailer: item.retailer,
+      input: item.identifier,
+      profileId: profiles[0]?.id || '',
+      proxyPoolId: proxyPools[0]?.id || '',
+      monitorDelay: settings.defaultMonitorDelay || 3500,
+      retryDelay: settings.defaultRetryDelay || 2000,
+      status: 'IDLE',
+      statusMessage: `Ready (${item.name})`,
+      flags: {
+        skipMonitor: false,
+        loopCheckout: false,
+        autoStartOnRestart: false,
+      },
+      logs: [
+        {
+          timestamp: Date.now(),
+          level: 'info',
+          message: `Market Intelligence task provisioned for ${item.name} (${item.identifier})${
+            profitSpread > 0 ? ` - Est. Spread: +$${profitSpread.toFixed(2)}` : ''
+          }`,
+        },
+      ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await handleSaveTask(newTask);
+    setCurrentPage('tasks');
+  };
+
   const handleExportBackup = async () => {
     const backup = {
       taskGroups,
@@ -431,6 +493,7 @@ export const App: React.FC = () => {
         onSelectPage={setCurrentPage}
         activeTasksCount={activeTasks}
         enableFreebiesSniper={settings.enableFreebiesSniper ?? true}
+        enableMarketAnalytics={settings.enableMarketAnalytics ?? true}
       />
 
       {/* Main Content Area */}
@@ -493,6 +556,10 @@ export const App: React.FC = () => {
               proxyPools={proxyPools}
               onCreateQuickTask={handleCreateQuickTask}
             />
+          )}
+
+          {currentPage === 'analytics' && (
+            <MarketAnalyticsPage onCreateTaskWithItem={handleCreateMarketTask} />
           )}
 
           {currentPage === 'captchas' && (

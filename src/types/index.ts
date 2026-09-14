@@ -191,10 +191,28 @@ export interface CaptchaHarvesterSlot {
   tokensHarvested: number;
 }
 
+export type MarketCategory = 'pokemon' | 'onepiece' | 'sports' | 'gaming' | 'consoles';
+
+export interface MarketItem {
+  id: string;
+  name: string;
+  setOrSeries: string;
+  category: MarketCategory;
+  retailer: Retailer;
+  identifier: string; // SKU or ASIN
+  msrp: number;
+  marketPrice: number;
+  volume24h?: string;
+  demand: 'ultra_high' | 'high' | 'moderate';
+  lastUpdated: number;
+  notes?: string;
+}
+
 export interface AppSettings {
   theme?: ThemeId;
   soundPack?: SoundPackId;
   enableFreebiesSniper?: boolean;
+  enableMarketAnalytics?: boolean;
   discordWebhookUrl: string;
   discordNotifyOnSuccess: boolean;
   discordNotifyOnDecline: boolean;

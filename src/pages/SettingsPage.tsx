@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Zap,
   RefreshCw,
+  TrendingUp,
 } from 'lucide-react';
 import { AppSettings, ThemeId, SoundPackId } from '../types';
 import {
@@ -47,6 +48,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [soundPack, setSoundPack] = useState<SoundPackId>(settings.soundPack || 'refract_cyan');
   const [enableFreebiesSniper, setEnableFreebiesSniper] = useState(
     settings.enableFreebiesSniper ?? true
+  );
+  const [enableMarketAnalytics, setEnableMarketAnalytics] = useState(
+    settings.enableMarketAnalytics ?? true
   );
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState(settings.discordWebhookUrl || '');
   const [discordNotifyOnSuccess, setDiscordNotifyOnSuccess] = useState(
@@ -134,6 +138,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         theme,
         soundPack,
         enableFreebiesSniper,
+        enableMarketAnalytics,
         discordWebhookUrl: discordWebhookUrl.trim(),
         discordNotifyOnSuccess,
         enableRemoteControl,
@@ -284,6 +289,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <p className="text-xs text-surface-400 leading-relaxed">
             Customize which automated tools appear in your navigation bar:
           </p>
+
+          <label className="flex items-center justify-between p-3.5 rounded-xl bg-surface-950 border border-surface-800 hover:border-surface-700 cursor-pointer transition-all">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 mt-0.5 shrink-0">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-white block">Live Market &amp; TCG Intelligence Feed</span>
+                <span className="text-[11px] text-surface-400 block mt-0.5 leading-relaxed">
+                  Real-time market analytics, MSRP resale spreads, ROI margins, and 1-click task provisioning across Pokémon TCG, One Piece, Sports Cards, GPUs, and Consoles.
+                </span>
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={enableMarketAnalytics}
+              onChange={(e) => setEnableMarketAnalytics(e.target.checked)}
+              className="w-4 h-4 rounded text-brand-500 accent-brand-500 cursor-pointer shrink-0 ml-3"
+            />
+          </label>
 
           <label className="flex items-center justify-between p-3.5 rounded-xl bg-surface-950 border border-surface-800 hover:border-surface-700 cursor-pointer transition-all">
             <div className="flex items-start space-x-3">

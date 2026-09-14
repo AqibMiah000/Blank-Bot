@@ -17,10 +17,11 @@
 8. [Captcha Harvesters: How to Get 0.90 Human Scores](#8-captcha-harvesters-how-to-get-090-human-scores)
 9. [AYCD Toolbox Integration (AutoSolve & Profile Builder)](#9-aycd-toolbox-integration-autosolve--profile-builder)
 10. [The Freebies & Pricing Glitch Sniper](#10-the-freebies--pricing-glitch-sniper)
-11. [Address Jigging & Virtual Credit Cards (VCCs)](#11-address-jigging--virtual-credit-cards-vccs)
-12. [Sound Packs & Discord Remote Control](#12-sound-packs--discord-remote-control)
-13. [Troubleshooting & Error Code Glossary](#13-troubleshooting--error-code-glossary)
-14. [Frequently Asked Questions (FAQ)](#14-frequently-asked-questions-faq)
+11. [Live Market & TCG Intelligence Feed](#11-live-market--tcg-intelligence-feed)
+12. [Address Jigging & Virtual Credit Cards (VCCs)](#12-address-jigging--virtual-credit-cards-vccs)
+13. [Sound Packs & Discord Remote Control](#13-sound-packs--discord-remote-control)
+14. [Troubleshooting & Error Code Glossary](#14-troubleshooting--error-code-glossary)
+15. [Frequently Asked Questions (FAQ)](#15-frequently-asked-questions-faq)
 
 ---
 
@@ -278,7 +279,25 @@ Retailers and third-party sellers occasionally make pricing mistakes—such as l
 
 ---
 
-## 11. Address Jigging & Virtual Credit Cards (VCCs)
+## 11. Live Market & TCG Intelligence Feed
+
+Blank features a built-in **Live Market & TCG Intelligence Feed** that tracks real-time market valuations, retail MSRP pricing, profit margins, and secondary resale velocity across trading cards, collectibles, and high-demand hardware.
+
+### Why It's Powerful:
+- **Zero Guesswork**: Instead of constantly switching between eBay completed listings, TCGPlayer market graphs, and StockX to see what products are actually profitable, Blank computes the live secondary market spread and ROI% right inside the application.
+- **Multi-Category Filtering**: Click the **Filter Categories** dropdown to select exactly what you care about:
+  - 🃏 **Pokémon TCG**: High-velocity modern & classic sets (Pokémon 151 Booster Bundles, Prismatic Evolutions ETBs, Crown Zenith).
+  - ⚓ **One Piece Card Game**: Hard-to-find booster boxes (OP-05 Awakening of the New Era, OP-06 Wings of the Captain, PRB-01 Premium Booster).
+  - ⚾ **Sports Cards**: Hobby & Mega boxes (Panini Prizm NFL, Topps Chrome MLB).
+  - 🖥️ **PC Hardware & GPUs**: Enthusiast silicon (NVIDIA RTX 5090 / 5080 Founders Edition, AMD Ryzen 7 9800X3D).
+  - 🎮 **Consoles & Handhelds**: PlayStation 5 Pro 30th Anniversary, Nintendo Switch OLED limited editions.
+- **Manual Instant Refresh Button**: Hit **"↻ Refresh Live Prices"** whenever you want an instant fresh feed without waiting for the automatic 3-minute background cache timer.
+- **1-Click Task Creation (`[+ Create Task]`)**: See a high-ROI item you want to cop? Click **"Create Task"** on that product card. Blank automatically provisions a task for that retailer and SKU/ASIN, assigns it to your task group, logs the estimated profit spread, and takes you directly to the Tasks dashboard ready to run!
+- **Toggleable in Settings**: Prefer a stripped-down UI? You can toggle the Market Analytics tab on or off anytime in **Settings → Modules & Navigation Tabs**.
+
+---
+
+## 12. Address Jigging & Virtual Credit Cards (VCCs)
 
 Retailers frequently impose **"Limit 1 Per Customer"** rules on popular items. If you buy 3 items to the same name and address with the same card, the store will cancel all 3 orders.
 
@@ -300,7 +319,7 @@ Assign a different VCC to each profile in Blank so your transactions are never l
 
 ---
 
-## 12. Sound Packs & Discord Remote Control
+## 13. Sound Packs & Discord Remote Control
 
 ### 6 Real-Time Synthesized Sound Packs
 Blank doesn't rely on external `.wav` files that can get lost or deleted. It synthesizes audio in real-time:
@@ -322,7 +341,7 @@ Preview and choose your favorite in the **Settings** tab!
 
 ---
 
-## 13. Troubleshooting & Error Code Glossary
+## 14. Troubleshooting & Error Code Glossary
 
 | Error Code | What Happened | How to Fix It |
 | :--- | :--- | :--- |
@@ -335,7 +354,7 @@ Preview and choose your favorite in the **Settings** tab!
 
 ---
 
-## 14. Frequently Asked Questions (FAQ)
+## 15. Frequently Asked Questions (FAQ)
 
 #### Q: Is Blank free to use?
 **A:** Yes. Blank is completely free and unrestricted. There are zero subscription keys, zero seat locks, and unlimited task creation.

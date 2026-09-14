@@ -10,6 +10,7 @@ import {
   Cloud,
   Terminal,
   Activity,
+  TrendingUp,
 } from 'lucide-react';
 
 export type PageId =
@@ -18,6 +19,7 @@ export type PageId =
   | 'proxies'
   | 'accounts'
   | 'freebies'
+  | 'analytics'
   | 'captchas'
   | 'settings'
   | 'auth';
@@ -27,6 +29,7 @@ interface SidebarProps {
   onSelectPage: (page: PageId) => void;
   activeTasksCount: number;
   enableFreebiesSniper?: boolean;
+  enableMarketAnalytics?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -34,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectPage,
   activeTasksCount,
   enableFreebiesSniper = true,
+  enableMarketAnalytics = true,
 }) => {
   const navItems = [
     { id: 'tasks' as PageId, label: 'Tasks', icon: Layers, badge: activeTasksCount || undefined },
@@ -42,6 +46,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'accounts' as PageId, label: 'Accounts', icon: UserCheck },
     ...(enableFreebiesSniper
       ? [{ id: 'freebies' as PageId, label: 'Freebies Sniper', icon: Gift, highlight: true }]
+      : []),
+    ...(enableMarketAnalytics
+      ? [{ id: 'analytics' as PageId, label: 'Market Analytics', icon: TrendingUp, highlight: true }]
       : []),
     { id: 'captchas' as PageId, label: 'Captchas', icon: ShieldCheck },
     { id: 'settings' as PageId, label: 'Settings', icon: Settings },

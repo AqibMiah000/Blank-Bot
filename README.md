@@ -29,6 +29,7 @@
 | :--- | :--- | :---: |
 | **Direct Protocol Checkout** | Sub-second checkout via HTTP/2 and raw TLS client-hello emulation (`got-scraping`). | ✅ Active |
 | **Multi-Retailer Engine** | Native checkout workflows for **Amazon US, Best Buy, Walmart, Target, and Apple**. | ✅ Active |
+| **Live Market & TCG Analytics** | Real-time secondary prices, MSRP profit spreads, ROI%, multi-category filtering & 1-click task provisioning. | ✅ Active |
 | **AYCD Toolbox Integration** | 1:1 integration with AYCD AutoSolve (OneClick) & Profile Builder (JSON/CSV bidirectional sync). | ✅ Active |
 | **Mass SKU Multiplier** | Paste 50+ SKUs at once with automatic round-robin profile allocation. | ✅ Active |
 | **Native Captcha Harvesters** | Floating persistent browser windows for Google 0.90 trust score and YouTube warming. | ✅ Active |
