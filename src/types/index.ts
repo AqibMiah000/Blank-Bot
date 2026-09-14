@@ -172,7 +172,16 @@ export type ThemeId =
   | 'nord'
   | 'emerald'
   | 'crimson'
-  | 'titanium';
+  | 'titanium'
+  | 'sunset'
+  | 'synthwave'
+  | 'tokyo'
+  | 'amethyst'
+  | 'volt'
+  | 'phantom'
+  | 'matcha'
+  | 'solar'
+  | 'custom';
 
 export type SoundPackId =
   | 'refract_cyan'
@@ -211,6 +220,10 @@ export interface MarketItem {
 
 export interface AppSettings {
   theme?: ThemeId;
+  customThemeColors?: {
+    primary: string;
+    secondary: string;
+  };
   soundPack?: SoundPackId;
   enableFreebiesSniper?: boolean;
   enableMarketAnalytics?: boolean;

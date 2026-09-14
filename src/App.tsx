@@ -24,6 +24,7 @@ import {
   SystemStats,
   Retailer,
 } from './types';
+import { applyTheme } from './utils/theme';
 
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageId>('tasks');
@@ -83,8 +84,13 @@ export const App: React.FC = () => {
       setSettings(s);
 
       const savedTheme = (localStorage.getItem('blank_theme') as ThemeId) || s.theme || 'oled';
+      let savedCustom = s.customThemeColors;
+      try {
+        const localCustom = localStorage.getItem('blank_custom_theme');
+        if (localCustom) savedCustom = JSON.parse(localCustom);
+      } catch {}
       setCurrentTheme(savedTheme);
-      document.documentElement.className = `theme-${savedTheme} dark`;
+      applyTheme(savedTheme, savedCustom);
     };
 
     loadState();
@@ -296,11 +302,18 @@ export const App: React.FC = () => {
     setSettings(newSettings);
   };
 
-  const handleThemeChange = async (theme: ThemeId) => {
+  const handleThemeChange = async (theme: ThemeId, customColors?: { primary: string; secondary: string }) => {
     setCurrentTheme(theme);
-    document.documentElement.className = `theme-${theme} dark`;
+    applyTheme(theme, customColors);
     localStorage.setItem('blank_theme', theme);
-    const updated = { ...settings, theme };
+    if (customColors) {
+      localStorage.setItem('blank_custom_theme', JSON.stringify(customColors));
+    }
+    const updated = {
+      ...settings,
+      theme,
+      ...(customColors ? { customThemeColors: customColors } : {}),
+    };
     setSettings(updated);
     await firestoreService.saveSettings(updated);
   };

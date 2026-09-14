@@ -151,6 +151,123 @@ select option {
   --accent-glow: rgba(59, 130, 246, 0.2);
 }
 
+/* 10. Sunset Mirage (Sunset Amber) */
+.theme-sunset {
+  --bg-primary: #0a0604;
+  --bg-surface: #140b07;
+  --bg-subtle: #1f120c;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(249, 115, 22, 0.25);
+  --accent-color: #f97316;
+  --accent-300: #fdba74;
+  --accent-400: #fb923c;
+  --accent-600: #ea580c;
+  --accent-glow: rgba(249, 115, 22, 0.2);
+}
+
+/* 11. Synthwave 80s (Neon Fuchsia) */
+.theme-synthwave {
+  --bg-primary: #0c0410;
+  --bg-surface: #170820;
+  --bg-subtle: #230d30;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(232, 121, 249, 0.25);
+  --accent-color: #e879f9;
+  --accent-300: #f5d0fe;
+  --accent-400: #f0abfc;
+  --accent-600: #c026d3;
+  --accent-glow: rgba(232, 121, 249, 0.2);
+}
+
+/* 12. Tokyo Cyberpunk (Hyper Pink) */
+.theme-tokyo {
+  --bg-primary: #0a030b;
+  --bg-surface: #150616;
+  --bg-subtle: #210a23;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(255, 42, 133, 0.25);
+  --accent-color: #ff2a85;
+  --accent-300: #ffa1cc;
+  --accent-400: #ff60a8;
+  --accent-600: #db0f67;
+  --accent-glow: rgba(255, 42, 133, 0.2);
+}
+
+/* 13. Royal Amethyst (Deep Purple) */
+.theme-amethyst {
+  --bg-primary: #080410;
+  --bg-surface: #120921;
+  --bg-subtle: #1c0e33;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(168, 85, 247, 0.25);
+  --accent-color: #a855f7;
+  --accent-300: #d8b4fe;
+  --accent-400: #c084fc;
+  --accent-600: #9333ea;
+  --accent-glow: rgba(168, 85, 247, 0.2);
+}
+
+/* 14. Acid Volt (Electric Lime) */
+.theme-volt {
+  --bg-primary: #060903;
+  --bg-surface: #0e1407;
+  --bg-subtle: #16200a;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(163, 230, 53, 0.25);
+  --accent-color: #a3e635;
+  --accent-300: #bef264;
+  --accent-400: #a3e635;
+  --accent-600: #65a30d;
+  --accent-glow: rgba(163, 230, 53, 0.2);
+}
+
+/* 15. Phantom Smoke (Gunmetal Silver) */
+.theme-phantom {
+  --bg-primary: #060709;
+  --bg-surface: #0e1015;
+  --bg-subtle: #161922;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(148, 163, 184, 0.25);
+  --accent-color: #94a3b8;
+  --accent-300: #cbd5e1;
+  --accent-400: #94a3b8;
+  --accent-600: #64748b;
+  --accent-glow: rgba(148, 163, 184, 0.2);
+}
+
+/* 16. Matcha Botanical (Forest Sage) */
+.theme-matcha {
+  --bg-primary: #040a05;
+  --bg-surface: #09150b;
+  --bg-subtle: #0f2112;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(74, 222, 128, 0.25);
+  --accent-color: #4ade80;
+  --accent-300: #86efac;
+  --accent-400: #4ade80;
+  --accent-600: #16a34a;
+  --accent-glow: rgba(74, 222, 128, 0.2);
+}
+
+/* 17. Solar Flare (Bright Solar Gold) */
+.theme-solar {
+  --bg-primary: #090803;
+  --bg-surface: #141206;
+  --bg-subtle: #201c0a;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(234, 179, 8, 0.25);
+  --accent-color: #eab308;
+  --accent-300: #fde047;
+  --accent-400: #facc15;
+  --accent-600: #ca8a04;
+  --accent-glow: rgba(234, 179, 8, 0.2);
+}
+
+/* 18. Custom User Hex Palette (Injected Dynamically via CSS Variables) */
+.theme-custom {
+  --border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Global focus and outline reset */
 *:focus, *:focus-visible {
   outline: none !important;
@@ -220,6 +337,33 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .theme-titanium .text-brand-400, .theme-titanium .text-cyan-400 { color: #60a5fa !important; }
 .theme-titanium .bg-brand-500, .theme-titanium .bg-cyan-500 { background-color: #3b82f6 !important; }
+
+.theme-sunset .text-brand-400, .theme-sunset .text-cyan-400 { color: #fb923c !important; }
+.theme-sunset .bg-brand-500, .theme-sunset .bg-cyan-500 { background-color: #f97316 !important; }
+
+.theme-synthwave .text-brand-400, .theme-synthwave .text-cyan-400 { color: #f0abfc !important; }
+.theme-synthwave .bg-brand-500, .theme-synthwave .bg-cyan-500 { background-color: #e879f9 !important; }
+
+.theme-tokyo .text-brand-400, .theme-tokyo .text-cyan-400 { color: #ff60a8 !important; }
+.theme-tokyo .bg-brand-500, .theme-tokyo .bg-cyan-500 { background-color: #ff2a85 !important; }
+
+.theme-amethyst .text-brand-400, .theme-amethyst .text-cyan-400 { color: #c084fc !important; }
+.theme-amethyst .bg-brand-500, .theme-amethyst .bg-cyan-500 { background-color: #a855f7 !important; }
+
+.theme-volt .text-brand-400, .theme-volt .text-cyan-400 { color: #bef264 !important; }
+.theme-volt .bg-brand-500, .theme-volt .bg-cyan-500 { background-color: #a3e635 !important; color: #060903 !important; }
+
+.theme-phantom .text-brand-400, .theme-phantom .text-cyan-400 { color: #cbd5e1 !important; }
+.theme-phantom .bg-brand-500, .theme-phantom .bg-cyan-500 { background-color: #94a3b8 !important; }
+
+.theme-matcha .text-brand-400, .theme-matcha .text-cyan-400 { color: #86efac !important; }
+.theme-matcha .bg-brand-500, .theme-matcha .bg-cyan-500 { background-color: #4ade80 !important; color: #040a05 !important; }
+
+.theme-solar .text-brand-400, .theme-solar .text-cyan-400 { color: #facc15 !important; }
+.theme-solar .bg-brand-500, .theme-solar .bg-cyan-500 { background-color: #eab308 !important; color: #090803 !important; }
+
+.theme-custom .text-brand-400, .theme-custom .text-cyan-400 { color: var(--accent-color) !important; }
+.theme-custom .bg-brand-500, .theme-custom .bg-cyan-500 { background-color: var(--accent-color) !important; color: #050507 !important; }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {

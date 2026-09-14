@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Bell,
   Volume2,
@@ -8,6 +8,7 @@ import {
   Upload,
   Send,
   CheckCircle,
+  Check,
   Save,
   Palette,
   Sliders,
@@ -16,8 +17,18 @@ import {
   Zap,
   RefreshCw,
   TrendingUp,
+  ChevronDown,
+  Sparkles,
+  Search,
 } from 'lucide-react';
 import { AppSettings, ThemeId, SoundPackId } from '../types';
+import {
+  PRESET_THEMES,
+  ThemeDefinition,
+  applyTheme,
+  isValidHex,
+  formatHex,
+} from '../utils/theme';
 import {
   playHighPitchedChime,
   playFreebieSniperChime,
@@ -32,7 +43,7 @@ import {
 interface SettingsPageProps {
   settings: AppSettings;
   onSaveSettings: (settings: AppSettings) => Promise<void>;
-  onThemeChange?: (theme: ThemeId) => void;
+  onThemeChange?: (theme: ThemeId, customColors?: { primary: string; secondary: string }) => void;
   onExportBackup: () => Promise<void>;
   onImportBackup: () => Promise<void>;
 }
@@ -44,7 +55,50 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onExportBackup,
   onImportBackup,
 }) => {
-  const [theme, setTheme] = useState<ThemeId>(settings.theme || 'oled');
+  const initialTheme = settings.theme || (localStorage.getItem('blank_theme') as ThemeId) || 'oled';
+  const [theme, setTheme] = useState<ThemeId>(initialTheme);
+
+  // Initialize custom colors: check settings, local storage, or current preset
+  const [customPrimary, setCustomPrimary] = useState(() => {
+    if (settings.customThemeColors?.primary) return settings.customThemeColors.primary;
+    try {
+      const ls = localStorage.getItem('blank_custom_theme');
+      if (ls) {
+        const parsed = JSON.parse(ls);
+        if (parsed.primary) return parsed.primary;
+      }
+    } catch {}
+    const matched = PRESET_THEMES.find((t) => t.id === initialTheme);
+    return matched ? matched.color.toUpperCase() : '#00F0FF';
+  });
+
+  const [customSecondary, setCustomSecondary] = useState(() => {
+    if (settings.customThemeColors?.secondary) return settings.customThemeColors.secondary;
+    try {
+      const ls = localStorage.getItem('blank_custom_theme');
+      if (ls) {
+        const parsed = JSON.parse(ls);
+        if (parsed.secondary) return parsed.secondary;
+      }
+    } catch {}
+    const matched = PRESET_THEMES.find((t) => t.id === initialTheme);
+    return matched ? matched.bg.toUpperCase() : '#000000';
+  });
+
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [themeSearch, setThemeSearch] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsThemeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const [soundPack, setSoundPack] = useState<SoundPackId>(settings.soundPack || 'refract_cyan');
   const [enableFreebiesSniper, setEnableFreebiesSniper] = useState(
     settings.enableFreebiesSniper ?? true
@@ -86,12 +140,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [testWebhookStatus, setTestWebhookStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSelectTheme = (t: ThemeId) => {
-    setTheme(t);
-    document.documentElement.className = `theme-${t} dark`;
-    localStorage.setItem('blank_theme', t);
+  const handleSelectPresetTheme = (t: ThemeDefinition) => {
+    setTheme(t.id);
+    setCustomPrimary(t.color.toUpperCase());
+    setCustomSecondary(t.bg.toUpperCase());
+    applyTheme(t.id);
+    localStorage.setItem('blank_theme', t.id);
     if (onThemeChange) {
-      onThemeChange(t);
+      onThemeChange(t.id);
+    }
+    setIsThemeDropdownOpen(false);
+  };
+
+  const handleApplyCustomTheme = () => {
+    const p = isValidHex(customPrimary) ? formatHex(customPrimary) : '#00F0FF';
+    const s = isValidHex(customSecondary) ? formatHex(customSecondary) : '#000000';
+    setCustomPrimary(p);
+    setCustomSecondary(s);
+    setTheme('custom');
+    applyTheme('custom', { primary: p, secondary: s });
+    localStorage.setItem('blank_theme', 'custom');
+    localStorage.setItem('blank_custom_theme', JSON.stringify({ primary: p, secondary: s }));
+    if (onThemeChange) {
+      onThemeChange('custom', { primary: p, secondary: s });
     }
   };
 
@@ -136,6 +207,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       await onSaveSettings({
         ...settings,
         theme,
+        customThemeColors: {
+          primary: isValidHex(customPrimary) ? formatHex(customPrimary) : '#00F0FF',
+          secondary: isValidHex(customSecondary) ? formatHex(customSecondary) : '#000000',
+        },
         soundPack,
         enableFreebiesSniper,
         enableMarketAnalytics,
@@ -220,7 +295,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Appearance & 9 Stealth Themes */}
+        {/* Appearance & Themes: Dropdown + Custom Theme Studio */}
         <div className="bg-surface-900 border border-surface-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -228,55 +303,250 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               UI Theme &amp; Stealth Aesthetics
             </span>
             <span className="text-[11px] font-mono text-brand-400 font-bold uppercase">
-              Active: {theme}
+              Active: {theme === 'custom' ? 'Custom Palette' : (PRESET_THEMES.find((p) => p.id === theme)?.name || theme)}
             </span>
           </div>
           <p className="text-xs text-surface-400 leading-relaxed">
-            Select your preferred visual style, including Refract's famous true pitch-black OLED mode:
+            Select your preferred visual style from our stealth presets, or enter custom hex codes to design your own palette:
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-2.5">
-            {[
-              { id: 'oled', name: 'Refract OLED', tag: 'True Pitch Black', color: '#00f0ff', bg: '#000000' },
-              { id: 'midnight', name: 'Stealth Midnight', tag: 'Pure Monochrome', color: '#f8fafc', bg: '#050507' },
-              { id: 'obsidian', name: 'Obsidian Dark', tag: 'Cyan Glow', color: '#06b6d4', bg: '#070a10' },
-              { id: 'carbon', name: 'Carbon Gold', tag: 'Amber / Gold', color: '#f59e0b', bg: '#080806' },
-              { id: 'dracula', name: 'Dracula Neon', tag: 'Gothic Violet', color: '#bd93f9', bg: '#090611' },
-              { id: 'nord', name: 'Nordic Frost', tag: 'Arctic Ice Blue', color: '#38bdf8', bg: '#060a0f' },
-              { id: 'emerald', name: 'Cyber Emerald', tag: 'Matrix Green', color: '#10b981', bg: '#030805' },
-              { id: 'crimson', name: 'Crimson Protocol', tag: 'Rose Red', color: '#f43f5e', bg: '#090305' },
-              { id: 'titanium', name: 'Titanium Cobalt', tag: 'Electric Blue', color: '#3b82f6', bg: '#050914' },
-            ].map((t) => (
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {/* Left Column: Preset Themes Dropdown */}
+            <div className="space-y-2 relative" ref={dropdownRef}>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-surface-300 uppercase tracking-wider">
+                  Preset Themes
+                </label>
+                <span className="text-[10px] text-surface-400 font-mono">
+                  {PRESET_THEMES.length} Presets Available
+                </span>
+              </div>
+
+              {/* Dropdown Button Trigger */}
               <button
                 type="button"
-                key={t.id}
-                onClick={() => handleSelectTheme(t.id as ThemeId)}
-                className={`p-3 rounded-xl border text-left transition-all relative ${
-                  theme === t.id
-                    ? 'border-brand-500 bg-surface-850 ring-1 ring-brand-500/50 shadow-md'
-                    : 'border-surface-800/80 bg-surface-950/60 hover:border-surface-700'
+                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                className={`w-full h-12 px-3.5 rounded-xl border text-left flex items-center justify-between transition-all group ${
+                  isThemeDropdownOpen
+                    ? 'border-brand-500 bg-surface-950 ring-1 ring-brand-500/40'
+                    : 'border-surface-800 bg-surface-950 hover:border-surface-700'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-1.5">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className="flex items-center space-x-1.5 shrink-0">
                     <span
-                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/20 shadow-sm"
-                      style={{ backgroundColor: t.color }}
+                      className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20 shadow-sm"
+                      style={{
+                        backgroundColor:
+                          theme === 'custom'
+                            ? (isValidHex(customPrimary) ? formatHex(customPrimary) : '#00F0FF')
+                            : (PRESET_THEMES.find((p) => p.id === theme)?.color || '#00f0ff'),
+                      }}
                     />
                     <span
-                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/20"
-                      style={{ backgroundColor: t.bg }}
+                      className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20"
+                      style={{
+                        backgroundColor:
+                          theme === 'custom'
+                            ? (isValidHex(customSecondary) ? formatHex(customSecondary) : '#000000')
+                            : (PRESET_THEMES.find((p) => p.id === theme)?.bg || '#000000'),
+                      }}
                     />
                   </div>
-                  {theme === t.id && (
-                    <CheckCircle className="w-3.5 h-3.5 text-brand-400" />
-                  )}
+                  <div className="truncate">
+                    <span className="text-xs font-bold text-white block leading-tight">
+                      {theme === 'custom'
+                        ? 'Custom User Palette'
+                        : (PRESET_THEMES.find((p) => p.id === theme)?.name || 'Refract OLED')}
+                    </span>
+                    <span className="text-[10px] text-surface-400 font-mono block leading-none mt-1">
+                      {theme === 'custom'
+                        ? `${formatHex(customPrimary)} / ${formatHex(customSecondary)}`
+                        : (PRESET_THEMES.find((p) => p.id === theme)?.tag || 'True Pitch Black')}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-xs font-bold text-slate-100 truncate">{t.name}</div>
-                <div className="text-[10px] text-surface-400 font-mono truncate">
-                  {t.tag}
-                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-surface-400 transition-transform shrink-0 ml-2 ${
+                    isThemeDropdownOpen ? 'rotate-180 text-brand-400' : 'group-hover:text-white'
+                  }`}
+                />
               </button>
-            ))}
+
+              {/* Floating Dropdown Panel */}
+              {isThemeDropdownOpen && (
+                <div className="absolute z-50 left-0 right-0 top-full mt-1.5 bg-surface-900 border border-surface-700/90 rounded-2xl shadow-2xl p-2 max-h-72 overflow-y-auto space-y-1 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+                  {/* Quick search input */}
+                  <div className="relative mb-2 px-1">
+                    <Search className="w-3.5 h-3.5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={themeSearch}
+                      onChange={(e) => setThemeSearch(e.target.value)}
+                      placeholder="Search themes..."
+                      className="w-full h-8 pl-8 pr-3 text-xs bg-surface-950 border border-surface-800 rounded-lg text-white placeholder:text-surface-500 focus:border-brand-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    {PRESET_THEMES.filter(
+                      (p) =>
+                        p.name.toLowerCase().includes(themeSearch.toLowerCase()) ||
+                        p.tag.toLowerCase().includes(themeSearch.toLowerCase())
+                    ).map((t) => {
+                      const isSelected = theme === t.id;
+                      return (
+                        <button
+                          type="button"
+                          key={t.id}
+                          onClick={() => handleSelectPresetTheme(t)}
+                          className={`w-full px-3 py-2 rounded-xl text-left flex items-center justify-between transition-all ${
+                            isSelected
+                              ? 'bg-brand-500/10 text-white border border-brand-500/30'
+                              : 'hover:bg-surface-800/80 text-surface-200 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0">
+                            <div className="flex items-center space-x-1.5 shrink-0">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20 shadow-sm"
+                                style={{ backgroundColor: t.color }}
+                              />
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20"
+                                style={{ backgroundColor: t.bg }}
+                              />
+                            </div>
+                            <div className="truncate">
+                              <span className="text-xs font-bold block text-white leading-tight">
+                                {t.name}
+                              </span>
+                              <span className="text-[10px] text-surface-400 font-mono block leading-none mt-0.5">
+                                {t.tag}
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-3.5 h-3.5 text-brand-400 shrink-0 ml-2" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Custom Theme Studio */}
+            <div className="space-y-2 p-3.5 rounded-xl bg-surface-950 border border-surface-800">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-surface-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-brand-400" />
+                  Custom Theme Studio
+                </span>
+                {theme === 'custom' && (
+                  <span className="text-[9px] font-mono font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30 px-1.5 py-0.5 rounded-md uppercase">
+                    Active
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[11px] text-surface-400 leading-tight">
+                Enter hex codes for primary accent and dark secondary base:
+              </p>
+
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                {/* Primary Accent Hex */}
+                <div>
+                  <label className="text-[10px] font-medium text-surface-400 block mb-1">
+                    Primary (Accent)
+                  </label>
+                  <div className="flex items-center bg-surface-900 border border-surface-800 focus-within:border-brand-500 rounded-xl px-2.5 py-1.5 gap-2 transition-all">
+                    <label className="relative cursor-pointer shrink-0" title="Click to pick color">
+                      <span
+                        className="w-4 h-4 rounded-full block border border-white/30 shadow-inner"
+                        style={{
+                          backgroundColor: isValidHex(customPrimary) ? formatHex(customPrimary) : '#00f0ff',
+                        }}
+                      />
+                      <input
+                        type="color"
+                        value={isValidHex(customPrimary) ? formatHex(customPrimary) : '#00f0ff'}
+                        onChange={(e) => setCustomPrimary(e.target.value.toUpperCase())}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      value={customPrimary}
+                      onChange={(e) => setCustomPrimary(e.target.value.toUpperCase())}
+                      placeholder="#00F0FF"
+                      maxLength={7}
+                      className="w-full bg-transparent text-xs font-mono text-white p-0 border-none focus:ring-0"
+                    />
+                  </div>
+                </div>
+
+                {/* Secondary Base Hex */}
+                <div>
+                  <label className="text-[10px] font-medium text-surface-400 block mb-1">
+                    Secondary (Base)
+                  </label>
+                  <div className="flex items-center bg-surface-900 border border-surface-800 focus-within:border-brand-500 rounded-xl px-2.5 py-1.5 gap-2 transition-all">
+                    <label className="relative cursor-pointer shrink-0" title="Click to pick color">
+                      <span
+                        className="w-4 h-4 rounded-full block border border-white/30 shadow-inner"
+                        style={{
+                          backgroundColor: isValidHex(customSecondary) ? formatHex(customSecondary) : '#000000',
+                        }}
+                      />
+                      <input
+                        type="color"
+                        value={isValidHex(customSecondary) ? formatHex(customSecondary) : '#000000'}
+                        onChange={(e) => setCustomSecondary(e.target.value.toUpperCase())}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      value={customSecondary}
+                      onChange={(e) => setCustomSecondary(e.target.value.toUpperCase())}
+                      placeholder="#000000"
+                      maxLength={7}
+                      className="w-full bg-transparent text-xs font-mono text-white p-0 border-none focus:ring-0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions & Preview */}
+              <div className="flex items-center justify-between pt-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-surface-400">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-white/20"
+                    style={{
+                      backgroundColor: isValidHex(customPrimary) ? formatHex(customPrimary) : '#00f0ff',
+                    }}
+                  />
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-white/20"
+                    style={{
+                      backgroundColor: isValidHex(customSecondary) ? formatHex(customSecondary) : '#000000',
+                    }}
+                  />
+                  <span>Live Preview</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleApplyCustomTheme}
+                  className="px-3.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Apply Custom
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
