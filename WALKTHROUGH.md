@@ -68,7 +68,7 @@ Ensure you have **Node.js 18+** installed on your system.
 
 `ash
 # 1. Clone the repository
-git clone https://github.com/your-username/blank.git
+git clone https://github.com/AqibMiah000/Blank-Bot.git
 cd blank
 
 # 2. Install dependencies
@@ -80,7 +80,8 @@ npm run dev:electron
 # 4. Compile production package
 npm run build:electron
 `
-The compiled, self-contained desktop package will be output to elease/win-unpacked/Blank.exe.
+The compiled, self-contained desktop package will be output to 
+elease/win-unpacked/Blank.exe.
 
 ---
 

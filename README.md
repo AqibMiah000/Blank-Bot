@@ -72,7 +72,7 @@ Looking for the full user guide, retailer strategies, proxy configuration, and I
 ### Installation & Development
 `ash
 # Clone the repository
-git clone https://github.com/your-username/blank.git
+git clone https://github.com/AqibMiah000/Blank-Bot.git
 cd blank
 
 # Install dependencies
@@ -87,7 +87,8 @@ npm run dev:electron
 # Compile and build the standalone Windows executable
 npm run build:electron
 `
-The packaged standalone application will be generated in elease/win-unpacked/Blank.exe featuring the minimalist blank logo.
+The packaged standalone application will be generated in 
+elease/win-unpacked/Blank.exe featuring the minimalist blank logo.
 
 ---
 
