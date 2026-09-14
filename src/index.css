@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Explicit dark theme select & option rules */
+select {
+  color-scheme: dark !important;
+}
+
+select option {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  font-size: 12px !important;
+  padding: 8px !important;
+}
+
+@layer base {
+  body {
+    @apply bg-surface-950 text-slate-100 antialiased font-sans overflow-hidden;
+    user-select: text;
+  }
+}
+
+/* ==========================================================================
+   9 ULTRA-CLEAN STEALTH THEMES (Rivaling Refract - Authentic Dark Surfaces)
+   ========================================================================== */
+
+/* 1. Refract OLED (Pure Black Pitch) - The Real Authentic Dark Theme */
+:root, .theme-oled {
+  --bg-primary: #000000;
+  --bg-surface: #0a0a0c;
+  --bg-subtle: #121216;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(0, 240, 255, 0.3);
+  --accent-color: #00f0ff;
+  --accent-300: #67e8f9;
+  --accent-400: #22d3ee;
+  --accent-600: #0891b2;
+  --accent-glow: rgba(0, 240, 255, 0.25);
+}
+
+/* 2. Stealth Midnight (Monochrome Minimalist) */
+.theme-midnight {
+  --bg-primary: #050507;
+  --bg-surface: #0f0f13;
+  --bg-subtle: #18181f;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.25);
+  --accent-color: #f8fafc;
+  --accent-300: #ffffff;
+  --accent-400: #e2e8f0;
+  --accent-600: #94a3b8;
+  --accent-glow: rgba(255, 255, 255, 0.2);
+}
+
+/* 3. Deep Obsidian (Cyan Accent) */
+.theme-obsidian {
+  --bg-primary: #070a10;
+  --bg-surface: #0c121d;
+  --bg-subtle: #121b2b;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(6, 182, 212, 0.25);
+  --accent-color: #06b6d4;
+  --accent-300: #67e8f9;
+  --accent-400: #22d3ee;
+  --accent-600: #0891b2;
+  --accent-glow: rgba(6, 182, 212, 0.2);
+}
+
+/* 4. Carbon Gold (Luxury Amber / Gold) */
+.theme-carbon {
+  --bg-primary: #080806;
+  --bg-surface: #11110d;
+  --bg-subtle: #1a1913;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(245, 158, 11, 0.25);
+  --accent-color: #f59e0b;
+  --accent-300: #fcd34d;
+  --accent-400: #fbbf24;
+  --accent-600: #d97706;
+  --accent-glow: rgba(245, 158, 11, 0.2);
+}
+
+/* 5. Dracula Neon (Gothic Violet) */
+.theme-dracula {
+  --bg-primary: #090611;
+  --bg-surface: #100b1e;
+  --bg-subtle: #19122d;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(189, 147, 249, 0.25);
+  --accent-color: #bd93f9;
+  --accent-300: #e9d5ff;
+  --accent-400: #d8b4fe;
+  --accent-600: #9333ea;
+  --accent-glow: rgba(189, 147, 249, 0.2);
+}
+
+/* 6. Nordic Frost (Ice Blue) */
+.theme-nord {
+  --bg-primary: #060a0f;
+  --bg-surface: #0b121a;
+  --bg-subtle: #121d2a;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(56, 189, 248, 0.25);
+  --accent-color: #38bdf8;
+  --accent-300: #7dd3fc;
+  --accent-400: #38bdf8;
+  --accent-600: #0284c7;
+  --accent-glow: rgba(56, 189, 248, 0.2);
+}
+
+/* 7. Cyber Emerald (Matrix Green) */
+.theme-emerald {
+  --bg-primary: #030805;
+  --bg-surface: #07130a;
+  --bg-subtle: #0d1e12;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(16, 185, 129, 0.25);
+  --accent-color: #10b981;
+  --accent-300: #6ee7b7;
+  --accent-400: #34d399;
+  --accent-600: #059669;
+  --accent-glow: rgba(16, 185, 129, 0.2);
+}
+
+/* 8. Crimson Protocol (Rose Red) */
+.theme-crimson {
+  --bg-primary: #090305;
+  --bg-surface: #14070c;
+  --bg-subtle: #1f0b12;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(244, 63, 94, 0.25);
+  --accent-color: #f43f5e;
+  --accent-300: #fda4af;
+  --accent-400: #fb7185;
+  --accent-600: #e11d48;
+  --accent-glow: rgba(244, 63, 94, 0.2);
+}
+
+/* 9. Titanium Cobalt (Electric Blue) */
+.theme-titanium {
+  --bg-primary: #050914;
+  --bg-surface: #091021;
+  --bg-subtle: #0e1933;
+  --border-color: rgba(255, 255, 255, 0.065);
+  --border-hover: rgba(59, 130, 246, 0.25);
+  --accent-color: #3b82f6;
+  --accent-300: #93c5fd;
+  --accent-400: #60a5fa;
+  --accent-600: #2563eb;
+  --accent-glow: rgba(59, 130, 246, 0.2);
+}
+
+/* Global focus and outline reset */
+*:focus, *:focus-visible {
+  outline: none !important;
+}
+
+/* ==========================================================================
+   INPUTS & MODALS: CONSISTENT DARK BOXES ACROSS ALL TYPES (Password, Email, etc.)
+   ========================================================================== */
+input, select, textarea, button {
+  outline: none !important;
+}
+
+/* Consistent, recessed dark well box for all input elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+select,
+textarea {
+  background-color: var(--bg-primary) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 1px var(--accent-glow) !important;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+::selection {
+  background-color: var(--accent-glow);
+  color: #ffffff;
+}
+
+/* Dynamic theme overrides for utilities */
+.theme-oled .text-brand-400, .theme-oled .text-cyan-400 { color: #00f0ff !important; }
+.theme-oled .bg-brand-500, .theme-oled .bg-cyan-500 { background-color: #00f0ff !important; }
+
+.theme-midnight .text-brand-400, .theme-midnight .text-cyan-400 { color: #f8fafc !important; }
+.theme-midnight .bg-brand-500, .theme-midnight .bg-cyan-500 { background-color: #e2e8f0 !important; color: #050507 !important; }
+
+.theme-carbon .text-brand-400, .theme-carbon .text-cyan-400 { color: #fbbf24 !important; }
+.theme-carbon .bg-brand-500, .theme-carbon .bg-cyan-500 { background-color: #f59e0b !important; }
+
+.theme-dracula .text-brand-400, .theme-dracula .text-cyan-400 { color: #d8b4fe !important; }
+.theme-dracula .bg-brand-500, .theme-dracula .bg-cyan-500 { background-color: #bd93f9 !important; }
+
+.theme-nord .text-brand-400, .theme-nord .text-cyan-400 { color: #38bdf8 !important; }
+.theme-nord .bg-brand-500, .theme-nord .bg-cyan-500 { background-color: #38bdf8 !important; }
+
+.theme-emerald .text-brand-400, .theme-emerald .text-cyan-400 { color: #34d399 !important; }
+.theme-emerald .bg-brand-500, .theme-emerald .bg-cyan-500 { background-color: #10b981 !important; }
+
+.theme-crimson .text-brand-400, .theme-crimson .text-cyan-400 { color: #fb7185 !important; }
+.theme-crimson .bg-brand-500, .theme-crimson .bg-cyan-500 { background-color: #f43f5e !important; }
+
+.theme-titanium .text-brand-400, .theme-titanium .text-cyan-400 { color: #60a5fa !important; }
+.theme-titanium .bg-brand-500, .theme-titanium .bg-cyan-500 { background-color: #3b82f6 !important; }
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}
+
+/* Monospace table helpers */
+.font-mono-data {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Glowing accents */
+.glow-cyan, .glow-accent {
+  box-shadow: 0 0 16px -2px var(--accent-glow);
+}

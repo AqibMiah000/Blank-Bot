@@ -1,0 +1,83 @@
+import electron from 'electron';
+const { contextBridge, ipcRenderer } = electron;
+import {
+  TaskItem,
+  BillingProfile,
+  ProxyPool,
+  ProxyItem,
+  RetailAccount,
+  TwoFactorRequest,
+  FreebiesConfig,
+  AmazonFreebieItem,
+} from '../src/types';
+
+contextBridge.exposeInMainWorld('blankBotAPI', {
+  // Local Cryptography (AES-256-GCM)
+  encrypt: (text: string, passphrase?: string) =>
+    ipcRenderer.invoke('crypto:encrypt', text, passphrase),
+  decrypt: (payload: string, passphrase?: string) =>
+    ipcRenderer.invoke('crypto:decrypt', payload, passphrase),
+
+  // Task Engine
+  startTask: (
+    task: TaskItem,
+    profile: BillingProfile,
+    proxyPool?: ProxyPool,
+    account?: RetailAccount
+  ) => ipcRenderer.invoke('tasks:start', task, profile, proxyPool, account),
+  stopTask: (taskId: string) => ipcRenderer.invoke('tasks:stop', taskId),
+  massStartTasks: (taskIds: string[]) => ipcRenderer.invoke('tasks:mass-start', taskIds),
+  massStopTasks: (taskIds: string[]) => ipcRenderer.invoke('tasks:mass-stop', taskIds),
+  onTaskUpdate: (callback: (data: any) => void) => {
+    const handler = (_: any, data: any) => callback(data);
+    ipcRenderer.on('tasks:update', handler);
+    return () => ipcRenderer.removeListener('tasks:update', handler);
+  },
+
+  // 2FA & IMAP Management
+  submit2FACode: (requestId: string, code: string) =>
+    ipcRenderer.invoke('imap:submit-code', requestId, code),
+  on2FARequest: (callback: (request: TwoFactorRequest) => void) => {
+    const handler = (_: any, data: TwoFactorRequest) => callback(data);
+    ipcRenderer.on('imap:2fa-request', handler);
+    return () => ipcRenderer.removeListener('imap:2fa-request', handler);
+  },
+  getIMAPStatus: () => ipcRenderer.invoke('imap:get-status'),
+  connectIMAP: (config: any) => ipcRenderer.invoke('imap:connect', config),
+
+  // Proxy Benchmarking
+  testProxy: (proxy: ProxyItem, targetUrl?: string) =>
+    ipcRenderer.invoke('proxies:test', proxy, targetUrl),
+  testProxyPool: (poolId: string, proxies: ProxyItem[], targetUrl?: string) =>
+    ipcRenderer.invoke('proxies:test-pool', poolId, proxies, targetUrl),
+
+  // Anti-Bot & Captcha
+  requestSensorToken: (retailer: string) =>
+    ipcRenderer.invoke('antibot:sensor-token', retailer),
+  solvePerimeterX: (url: string, pxPayload: any) =>
+    ipcRenderer.invoke('antibot:solve-px', url, pxPayload),
+
+  // Discord & Audio
+  sendDiscordWebhook: (url: string, payload: any) =>
+    ipcRenderer.invoke('integrations:discord-webhook', url, payload),
+  playAlertSound: (type?: 'success' | 'fail', customPath?: string) =>
+    ipcRenderer.invoke('integrations:play-sound', type, customPath),
+
+  // Encrypted State Portability
+  exportBackup: (payload: string) => ipcRenderer.invoke('storage:export', payload),
+  importBackup: () => ipcRenderer.invoke('storage:import'),
+
+  // Amazon Freebies Sniper
+  startFreebiesSniper: (config: FreebiesConfig) =>
+    ipcRenderer.invoke('freebies:start', config),
+  stopFreebiesSniper: () => ipcRenderer.invoke('freebies:stop'),
+  fetchLiveAmazonDeals: () => ipcRenderer.invoke('freebies:fetch-live-deals'),
+  onFreebieDetected: (callback: (item: AmazonFreebieItem) => void) => {
+    const handler = (_: any, data: AmazonFreebieItem) => callback(data);
+    ipcRenderer.on('freebies:detected', handler);
+    return () => ipcRenderer.removeListener('freebies:detected', handler);
+  },
+
+  // Shell External Browser Launcher
+  openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),
+});

@@ -1,0 +1,80 @@
+{
+  "name": "blank",
+  "version": "1.2.0",
+  "description": "Next-Generation High-Frequency Desktop Retail Automation Suite",
+  "main": "dist-electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "concurrently -k \"vite\" \"npm run wait-and-electron\"",
+    "wait-and-electron": "node scripts/wait-for-vite.js && electron .",
+    "start": "electron .",
+    "build": "tsc && vite build",
+    "build:electron": "node scripts/generate-icon.cjs && npm run compile:electron && vite build && electron-builder --win --dir && node scripts/apply-icon.cjs",
+    "compile:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --outfile=dist-electron/main.js --external:electron --external:got-scraping --external:imapflow && esbuild electron/preload.ts --bundle --platform=node --format=cjs --outfile=dist-electron/preload.cjs --external:electron",
+    "test:verify": "tsx scripts/verify-core.ts",
+    "generate-icon": "node scripts/generate-icon.cjs"
+  },
+  "keywords": [
+    "retail-automation",
+    "electron",
+    "react",
+    "got-scraping",
+    "high-frequency-checkout",
+    "firebase",
+    "anti-bot-bypass"
+  ],
+  "author": "Blank Bot Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "firebase": "^11.4.0",
+    "got-scraping": "^4.0.7",
+    "imapflow": "^1.0.171",
+    "lucide-react": "^0.477.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.5.3",
+    "rcedit": "^5.0.2",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0"
+  },
+  "build": {
+    "appId": "com.blank.desktop",
+    "productName": "Blank",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist",
+      "dist-electron"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "dir"
+      ],
+      "signAndEditExecutable": false
+    }
+  }
+}
