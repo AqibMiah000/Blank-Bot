@@ -84,8 +84,11 @@ const buildDir = path.resolve(__dirname, '../build');
 if (!fs.existsSync(buildDir)) fs.mkdirSync(buildDir, { recursive: true });
 
 // Sleek solid pitch-black blank canvas icon (#0a0a0c)
-const png = createPng(256, 256, 10, 10, 12, 255);
-fs.writeFileSync(path.join(buildDir, 'icon.png'), png);
-const ico = createIcoFromPng(png);
+// macOS electron-builder requires icon.png to be at least 512x512
+const png512 = createPng(512, 512, 10, 10, 12, 255);
+fs.writeFileSync(path.join(buildDir, 'icon.png'), png512);
+
+const png256 = createPng(256, 256, 10, 10, 12, 255);
+const ico = createIcoFromPng(png256);
 fs.writeFileSync(path.join(buildDir, 'icon.ico'), ico);
-console.log('Successfully generated build/icon.png and build/icon.ico');
+console.log('Successfully generated build/icon.png (512x512) and build/icon.ico (256x256)');
