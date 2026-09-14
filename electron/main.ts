@@ -224,6 +224,69 @@ function registerIpcHandlers(): void {
     return importBackupFromFile(mainWindow || undefined);
   });
 
+  // Native File-System Storage (UserData JSON persistence)
+  const getStoreDir = () => {
+    const dir = path.join(app.getPath('userData'), 'store');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  };
+
+  ipcMain.handle('storage:save-settings', async (_, newSettings: any) => {
+    try {
+      const filePath = path.join(app.getPath('userData'), 'blank_settings.json');
+      fs.writeFileSync(filePath, JSON.stringify(newSettings, null, 2), 'utf-8');
+      return { success: true };
+    } catch (err: any) {
+      console.error('Failed to save settings to disk:', err);
+      return { success: false, message: err?.message };
+    }
+  });
+
+  ipcMain.handle('storage:get-settings', async () => {
+    try {
+      const filePath = path.join(app.getPath('userData'), 'blank_settings.json');
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        return JSON.parse(raw);
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to read settings from disk:', err);
+      return null;
+    }
+  });
+
+  ipcMain.handle('storage:set-item', async (_, key: string, data: any) => {
+    try {
+      const dir = getStoreDir();
+      const safeKey = String(key).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filePath = path.join(dir, `${safeKey}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      return { success: true };
+    } catch (err: any) {
+      console.error(`Failed to write store item ${key}:`, err);
+      return { success: false, message: err?.message };
+    }
+  });
+
+  ipcMain.handle('storage:get-item', async (_, key: string) => {
+    try {
+      const dir = getStoreDir();
+      const safeKey = String(key).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filePath = path.join(dir, `${safeKey}.json`);
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        return JSON.parse(raw);
+      }
+      return null;
+    } catch (err) {
+      console.error(`Failed to read store item ${key}:`, err);
+      return null;
+    }
+  });
+
   // Amazon Freebies Sniper
   ipcMain.handle('freebies:start', async (_, config: FreebiesConfig) => {
     return freebiesSniper.start(config);

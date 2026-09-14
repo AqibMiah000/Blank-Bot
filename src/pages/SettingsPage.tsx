@@ -138,7 +138,30 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [imapStatusMsg, setImapStatusMsg] = useState<string | null>(null);
 
   const [testWebhookStatus, setTestWebhookStatus] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sync state whenever settings prop updates (e.g. after loading from persistent disk)
+  useEffect(() => {
+    if (!settings) return;
+    if (settings.theme) setTheme(settings.theme);
+    if (settings.soundPack) setSoundPack(settings.soundPack);
+    if (settings.enableFreebiesSniper !== undefined) setEnableFreebiesSniper(settings.enableFreebiesSniper);
+    if (settings.enableMarketAnalytics !== undefined) setEnableMarketAnalytics(settings.enableMarketAnalytics);
+    if (settings.discordWebhookUrl !== undefined) setDiscordWebhookUrl(settings.discordWebhookUrl);
+    if (settings.discordNotifyOnSuccess !== undefined) setDiscordNotifyOnSuccess(settings.discordNotifyOnSuccess);
+    if (settings.enableRemoteControl !== undefined) setEnableRemoteControl(settings.enableRemoteControl);
+    if (settings.playSoundOnSuccess !== undefined) setPlaySoundOnSuccess(settings.playSoundOnSuccess);
+    if (settings.customSoundPath !== undefined) setCustomSoundPath(settings.customSoundPath);
+    if (settings.encryptionPassphrase !== undefined) setEncryptionPassphrase(settings.encryptionPassphrase);
+    if (settings.defaultMonitorDelay !== undefined) setDefaultMonitorDelay(settings.defaultMonitorDelay);
+    if (settings.defaultRetryDelay !== undefined) setDefaultRetryDelay(settings.defaultRetryDelay);
+    if (settings.solverKeys?.aycdApiKey !== undefined) setAycdApiKey(settings.solverKeys.aycdApiKey);
+    if (settings.solverKeys?.aycdAccessToken !== undefined) setAycdAccessToken(settings.solverKeys.aycdAccessToken);
+    if (settings.solverKeys?.aycdAutoRoute !== undefined) setAycdAutoRoute(settings.solverKeys.aycdAutoRoute);
+    if (settings.customThemeColors?.primary) setCustomPrimary(settings.customThemeColors.primary);
+    if (settings.customThemeColors?.secondary) setCustomSecondary(settings.customThemeColors.secondary);
+  }, [settings]);
 
   const handleSelectPresetTheme = (t: ThemeDefinition) => {
     setTheme(t.id);
@@ -203,8 +226,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setSaveMessage(null);
     try {
-      await onSaveSettings({
+      const updated: AppSettings = {
         ...settings,
         theme,
         customThemeColors: {
@@ -220,15 +244,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         playSoundOnSuccess,
         customSoundPath: customSoundPath.trim(),
         encryptionPassphrase: encryptionPassphrase.trim(),
-        defaultMonitorDelay,
-        defaultRetryDelay,
+        defaultMonitorDelay: Number(defaultMonitorDelay) || 3500,
+        defaultRetryDelay: Number(defaultRetryDelay) || 2000,
         solverKeys: {
           ...settings.solverKeys,
           aycdApiKey: aycdApiKey.trim(),
           aycdAccessToken: aycdAccessToken.trim(),
           aycdAutoRoute,
         },
-      });
+      };
+      await onSaveSettings(updated);
+      setSaveMessage('Preferences successfully saved to persistent disk & active session!');
+      setTimeout(() => setSaveMessage(null), 4500);
+    } catch (err: any) {
+      setSaveMessage(`Failed to save preferences: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
@@ -293,6 +322,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           Configure visual themes, Discord notifications, high-pitched audio chimes, and state migration.
         </p>
       </div>
+
+      {saveMessage && (
+        <div className="p-3.5 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 font-semibold flex items-center gap-2.5 shadow-md">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{saveMessage}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Appearance & Themes: Dropdown + Custom Theme Studio */}
@@ -981,6 +1017,53 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         </div>
 
+        {/* Task Engine Delays & High-Frequency Polling Rates */}
+        <div className="bg-surface-900 border border-surface-800 rounded-2xl p-5 space-y-4">
+          <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-brand-400" />
+            Task Engine Delays &amp; Polling Rates
+          </span>
+          <p className="text-xs text-surface-400">
+            Configure default request intervals for stock monitoring loops and checkout retry delays (in milliseconds).
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1">
+                Default Monitor Delay (ms)
+              </label>
+              <input
+                type="number"
+                min={200}
+                max={60000}
+                value={defaultMonitorDelay}
+                onChange={(e) => setDefaultMonitorDelay(Number(e.target.value))}
+                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:border-brand-500 outline-none"
+              />
+              <span className="text-[10px] text-surface-500 mt-1 block font-mono">
+                Recommended: 3500ms for Best Buy / Target / Amazon
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1">
+                Default Retry Delay (ms)
+              </label>
+              <input
+                type="number"
+                min={100}
+                max={30000}
+                value={defaultRetryDelay}
+                onChange={(e) => setDefaultRetryDelay(Number(e.target.value))}
+                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:border-brand-500 outline-none"
+              />
+              <span className="text-[10px] text-surface-500 mt-1 block font-mono">
+                Recommended: 2000ms on checkout queue or cart error
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Encryption Passphrase & Backup Portability */}
         <div className="bg-surface-900 border border-surface-800 rounded-2xl p-5 space-y-4">
           <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -1022,14 +1105,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          <span>{isSaving ? 'Saving...' : 'Save Global Preferences'}</span>
-        </button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/20 flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Save className="w-4 h-4" />
+            <span>{isSaving ? 'Saving to Disk...' : 'Save Global Preferences'}</span>
+          </button>
+
+          {saveMessage && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{saveMessage}</span>
+            </div>
+          )}
+        </div>
       </form>
     </div>
   );

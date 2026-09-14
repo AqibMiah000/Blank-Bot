@@ -83,7 +83,7 @@ export const App: React.FC = () => {
       setAccounts(a);
       setSettings(s);
 
-      const savedTheme = (localStorage.getItem('blank_theme') as ThemeId) || s.theme || 'oled';
+      const savedTheme = s.theme || (localStorage.getItem('blank_theme') as ThemeId) || 'oled';
       let savedCustom = s.customThemeColors;
       try {
         const localCustom = localStorage.getItem('blank_custom_theme');
@@ -300,6 +300,14 @@ export const App: React.FC = () => {
   const handleSaveSettings = async (newSettings: AppSettings) => {
     await firestoreService.saveSettings(newSettings);
     setSettings(newSettings);
+    if (newSettings.theme) {
+      setCurrentTheme(newSettings.theme);
+      applyTheme(newSettings.theme, newSettings.customThemeColors);
+      localStorage.setItem('blank_theme', newSettings.theme);
+      if (newSettings.customThemeColors) {
+        localStorage.setItem('blank_custom_theme', JSON.stringify(newSettings.customThemeColors));
+      }
+    }
   };
 
   const handleThemeChange = async (theme: ThemeId, customColors?: { primary: string; secondary: string }) => {

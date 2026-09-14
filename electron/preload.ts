@@ -69,9 +69,13 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
   playAlertSound: (type?: 'success' | 'fail', customPath?: string) =>
     ipcRenderer.invoke('integrations:play-sound', type, customPath),
 
-  // Encrypted State Portability
+  // Encrypted State Portability & Native Disk Persistence
   exportBackup: (payload: string) => ipcRenderer.invoke('storage:export', payload),
   importBackup: () => ipcRenderer.invoke('storage:import'),
+  saveSettings: (settings: any) => ipcRenderer.invoke('storage:save-settings', settings),
+  getSettings: () => ipcRenderer.invoke('storage:get-settings'),
+  setStoreItem: (key: string, data: any) => ipcRenderer.invoke('storage:set-item', key, data),
+  getStoreItem: (key: string) => ipcRenderer.invoke('storage:get-item', key),
 
   // Amazon Freebies Sniper
   startFreebiesSniper: (config: FreebiesConfig) =>

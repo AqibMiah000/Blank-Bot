@@ -36,6 +36,9 @@ export class FirestoreSyncService {
   private setLocal<T>(key: string, data: T): void {
     try {
       localStorage.setItem(`blank_bot_${key}`, JSON.stringify(data));
+      if (typeof window !== 'undefined' && window.blankBotAPI?.setStoreItem) {
+        window.blankBotAPI.setStoreItem(key, data).catch(() => {});
+      }
     } catch (err) {
       console.error('LocalStorage write error:', err);
     }
@@ -72,7 +75,17 @@ export class FirestoreSyncService {
         console.warn('Cloud task groups fetch failed, using local storage:', err);
       }
     }
-    return this.getLocal<TaskGroup[]>('task_groups', []);
+    const local = this.getLocal<TaskGroup[]>('task_groups', []);
+    if (local.length === 0 && typeof window !== 'undefined' && window.blankBotAPI?.getStoreItem) {
+      try {
+        const disk = await window.blankBotAPI.getStoreItem('task_groups');
+        if (Array.isArray(disk) && disk.length > 0) {
+          this.setLocal('task_groups', disk);
+          return disk;
+        }
+      } catch {}
+    }
+    return local;
   }
 
   public async deleteTaskGroup(groupId: string): Promise<void> {
@@ -116,7 +129,17 @@ export class FirestoreSyncService {
         console.warn('Cloud tasks fetch failed, using local storage:', err);
       }
     }
-    return this.getLocal<TaskItem[]>('tasks', []);
+    const local = this.getLocal<TaskItem[]>('tasks', []);
+    if (local.length === 0 && typeof window !== 'undefined' && window.blankBotAPI?.getStoreItem) {
+      try {
+        const disk = await window.blankBotAPI.getStoreItem('tasks');
+        if (Array.isArray(disk) && disk.length > 0) {
+          this.setLocal('tasks', disk);
+          return disk;
+        }
+      } catch {}
+    }
+    return local;
   }
 
   public async deleteTask(taskId: string): Promise<void> {
@@ -161,7 +184,17 @@ export class FirestoreSyncService {
         console.warn('Cloud profiles fetch error, using local fallback:', err);
       }
     }
-    return this.getLocal<BillingProfile[]>('profiles', []);
+    const local = this.getLocal<BillingProfile[]>('profiles', []);
+    if (local.length === 0 && typeof window !== 'undefined' && window.blankBotAPI?.getStoreItem) {
+      try {
+        const disk = await window.blankBotAPI.getStoreItem('profiles');
+        if (Array.isArray(disk) && disk.length > 0) {
+          this.setLocal('profiles', disk);
+          return disk;
+        }
+      } catch {}
+    }
+    return local;
   }
 
   public async deleteProfile(profileId: string): Promise<void> {
@@ -205,7 +238,17 @@ export class FirestoreSyncService {
         console.warn('Cloud proxy pools fetch error:', err);
       }
     }
-    return this.getLocal<ProxyPool[]>('proxy_pools', []);
+    const local = this.getLocal<ProxyPool[]>('proxy_pools', []);
+    if (local.length === 0 && typeof window !== 'undefined' && window.blankBotAPI?.getStoreItem) {
+      try {
+        const disk = await window.blankBotAPI.getStoreItem('proxy_pools');
+        if (Array.isArray(disk) && disk.length > 0) {
+          this.setLocal('proxy_pools', disk);
+          return disk;
+        }
+      } catch {}
+    }
+    return local;
   }
 
   public async deleteProxyPool(poolId: string): Promise<void> {
@@ -249,7 +292,17 @@ export class FirestoreSyncService {
         console.warn('Cloud accounts fetch error:', err);
       }
     }
-    return this.getLocal<RetailAccount[]>('accounts', []);
+    const local = this.getLocal<RetailAccount[]>('accounts', []);
+    if (local.length === 0 && typeof window !== 'undefined' && window.blankBotAPI?.getStoreItem) {
+      try {
+        const disk = await window.blankBotAPI.getStoreItem('accounts');
+        if (Array.isArray(disk) && disk.length > 0) {
+          this.setLocal('accounts', disk);
+          return disk;
+        }
+      } catch {}
+    }
+    return local;
   }
 
   public async deleteAccount(accountId: string): Promise<void> {
@@ -265,15 +318,26 @@ export class FirestoreSyncService {
   // --- SETTINGS ---
   public async saveSettings(settings: AppSettings): Promise<void> {
     this.setLocal('settings', settings);
+    if (typeof window !== 'undefined' && window.blankBotAPI?.saveSettings) {
+      try {
+        await window.blankBotAPI.saveSettings(settings);
+      } catch (err) {
+        console.warn('Native settings disk save failed:', err);
+      }
+    }
     const uid = this.getUserId();
     if (isFirebaseConfigured && db && uid) {
       const ref = doc(db, 'settings', uid);
-      await setDoc(ref, settings);
+      await setDoc(ref, { ...settings, userId: uid });
     }
   }
 
   public async getSettings(): Promise<AppSettings> {
     const defaultSettings: AppSettings = {
+      theme: 'oled',
+      soundPack: 'refract_cyan',
+      enableFreebiesSniper: true,
+      enableMarketAnalytics: true,
       discordWebhookUrl: '',
       discordNotifyOnSuccess: true,
       discordNotifyOnDecline: false,
@@ -286,19 +350,42 @@ export class FirestoreSyncService {
       shapeHarvestInterval: 180,
     };
 
+    // 1. Highest priority: Native Electron disk storage
+    if (typeof window !== 'undefined' && window.blankBotAPI?.getSettings) {
+      try {
+        const diskSettings = await window.blankBotAPI.getSettings();
+        if (diskSettings && typeof diskSettings === 'object' && Object.keys(diskSettings).length > 0) {
+          const merged = { ...defaultSettings, ...diskSettings };
+          try {
+            localStorage.setItem('blank_bot_settings', JSON.stringify(merged));
+          } catch {}
+          return merged;
+        }
+      } catch (err) {
+        console.warn('Native settings fetch error:', err);
+      }
+    }
+
+    // 2. Cloud Firestore (if configured)
     const uid = this.getUserId();
     if (isFirebaseConfigured && db && uid) {
       try {
         const q = query(collection(db, 'settings'), where('userId', '==', uid));
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
-          return snapshot.docs[0].data() as AppSettings;
+          const cloudSettings = snapshot.docs[0].data() as AppSettings;
+          const merged = { ...defaultSettings, ...cloudSettings };
+          this.setLocal('settings', merged);
+          return merged;
         }
       } catch (err) {
         console.warn('Settings cloud fetch error:', err);
       }
     }
-    return this.getLocal<AppSettings>('settings', defaultSettings);
+
+    // 3. Browser LocalStorage fallback
+    const local = this.getLocal<AppSettings>('settings', defaultSettings);
+    return { ...defaultSettings, ...local };
   }
 }
 
