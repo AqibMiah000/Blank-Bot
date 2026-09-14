@@ -33,6 +33,14 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
   const [twoCaptcha, setTwoCaptcha] = useState(solverKeys.twoCaptcha || '');
   const [capSolver, setCapSolver] = useState(solverKeys.capSolver || '');
   const [antiCaptcha, setAntiCaptcha] = useState(solverKeys.antiCaptcha || '');
+  const [aycdApiKey, setAycdApiKey] = useState(solverKeys.aycdApiKey || '');
+  const [aycdAccessToken, setAycdAccessToken] = useState(solverKeys.aycdAccessToken || '');
+  const [aycdAutoRoute, setAycdAutoRoute] = useState(solverKeys.aycdAutoRoute ?? true);
+  const [isTestingAutoSolve, setIsTestingAutoSolve] = useState(false);
+  const [autoSolveResult, setAutoSolveResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [harvesters, setHarvesters] = useState<CaptchaHarvesterSlot[]>(() => {
@@ -140,11 +148,48 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
         twoCaptcha: twoCaptcha.trim(),
         capSolver: capSolver.trim(),
         antiCaptcha: antiCaptcha.trim(),
+        aycdApiKey: aycdApiKey.trim(),
+        aycdAccessToken: aycdAccessToken.trim(),
+        aycdAutoRoute,
       });
-      setStatusMessage('Solver API credentials saved securely.');
+      setStatusMessage('Solver & AYCD credentials saved securely.');
       setTimeout(() => setStatusMessage(null), 3500);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleTestAutoSolve = async () => {
+    if (!aycdApiKey.trim() || !aycdAccessToken.trim()) {
+      setAutoSolveResult({
+        success: false,
+        message: 'Please enter both AYCD AutoSolve API Key and Access Token first.',
+      });
+      return;
+    }
+
+    setIsTestingAutoSolve(true);
+    setAutoSolveResult(null);
+    try {
+      if (window.blankBotAPI?.testAutoSolve) {
+        const res = await window.blankBotAPI.testAutoSolve(
+          aycdApiKey.trim(),
+          aycdAccessToken.trim()
+        );
+        setAutoSolveResult(res);
+      } else {
+        setAutoSolveResult({
+          success: true,
+          message: 'Connected to AYCD OneClick successfully! (Simulation Mode)',
+        });
+      }
+    } catch (err: any) {
+      setAutoSolveResult({
+        success: false,
+        message: err?.message || 'Failed to connect to AYCD AutoSolve.',
+      });
+    } finally {
+      setIsTestingAutoSolve(false);
     }
   };
 
@@ -210,7 +255,7 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
       )}
 
       {/* Metrics Banner */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800">
           <div className="text-[10px] font-mono text-surface-400 uppercase">Active Windows</div>
           <div className="text-xl font-bold text-white mt-1 flex items-center gap-2">
@@ -229,6 +274,24 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
           <div className="text-xl font-bold text-emerald-400 mt-1 font-mono flex items-center gap-1.5">
             <Flame className="w-4 h-4 text-emerald-400" />
             <span>0.90 (Optimal)</span>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800">
+          <div className="text-[10px] font-mono text-surface-400 uppercase">AYCD AutoSolve</div>
+          <div className="text-xl font-bold text-white mt-1 font-mono flex items-center gap-1.5">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                aycdApiKey && aycdAccessToken ? 'bg-emerald-400 animate-pulse' : 'bg-surface-700'
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                aycdApiKey && aycdAccessToken ? 'text-emerald-400 font-semibold' : 'text-surface-400'
+              }`}
+            >
+              {aycdApiKey && aycdAccessToken ? 'OneClick Active' : 'Unlinked'}
+            </span>
           </div>
         </div>
 
@@ -417,7 +480,117 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
         </div>
       </div>
 
-      {/* Module 3: Third-Party Solver API Gateway */}
+      {/* Module 3: AYCD AutoSolve (OneClick) Integration */}
+      <div className="bg-surface-900 border border-brand-500/30 ring-1 ring-brand-500/10 rounded-2xl p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center space-x-2.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span>AYCD AutoSolve &amp; OneClick Integration</span>
+                <span className="px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300 text-[10px] font-mono normal-case">
+                  Toolbox Native
+                </span>
+              </h3>
+            </div>
+            <p className="text-xs text-surface-400 mt-1">
+              Route high-frequency checkout captchas (reCAPTCHA v2/v3, Turnstile, hCaptcha) directly to your AYCD OneClick desktop application and proxy farm.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (window.blankBotAPI?.openExternal) {
+                window.blankBotAPI.openExternal('https://aycd.io/account');
+              } else {
+                window.open('https://aycd.io/account', '_blank');
+              }
+            }}
+            className="px-3 py-1.5 bg-surface-800 hover:bg-surface-700 text-surface-300 hover:text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto transition-all"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-brand-400" />
+            <span>AYCD Dashboard</span>
+          </button>
+        </div>
+
+        {autoSolveResult && (
+          <div
+            className={`p-3.5 rounded-xl border text-xs font-mono flex items-center gap-2.5 ${
+              autoSolveResult.success
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+            }`}
+          >
+            {autoSolveResult.success ? (
+              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : (
+              <Zap className="w-4 h-4 text-rose-400 shrink-0" />
+            )}
+            <span>{autoSolveResult.message}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+          <div>
+            <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1">
+              AutoSolve API Key
+            </label>
+            <input
+              type="password"
+              placeholder="Paste AYCD AutoSolve API Key..."
+              value={aycdApiKey}
+              onChange={(e) => setAycdApiKey(e.target.value)}
+              className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:border-brand-500 outline-none"
+            />
+            <span className="text-[10px] text-surface-500 mt-1 block">
+              Found under AYCD OneClick &rarr; Settings &rarr; AutoSolve
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1">
+              AutoSolve Access Token
+            </label>
+            <input
+              type="password"
+              placeholder="Paste AYCD AutoSolve Access Token..."
+              value={aycdAccessToken}
+              onChange={(e) => setAycdAccessToken(e.target.value)}
+              className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:border-brand-500 outline-none"
+            />
+            <span className="text-[10px] text-surface-500 mt-1 block">
+              Generated in AYCD OneClick AutoSolve tab
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+          <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={aycdAutoRoute}
+              onChange={(e) => setAycdAutoRoute(e.target.checked)}
+              className="w-4 h-4 rounded border-surface-700 bg-surface-950 text-brand-600 focus:ring-brand-500/20"
+            />
+            <span className="text-xs font-medium text-surface-300">
+              Auto-route checkout challenge tokens to AYCD OneClick during drops
+            </span>
+          </label>
+
+          <button
+            type="button"
+            onClick={handleTestAutoSolve}
+            disabled={isTestingAutoSolve}
+            className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-2 transition-all self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isTestingAutoSolve ? 'animate-spin' : ''}`} />
+            <span>{isTestingAutoSolve ? 'Testing AutoSolve...' : 'Test AutoSolve Connection'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Module 4: Third-Party Solver API Gateway */}
       <div className="bg-surface-900 border border-surface-800 rounded-2xl p-6 space-y-5">
         <div>
           <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">

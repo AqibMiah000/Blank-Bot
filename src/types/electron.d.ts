@@ -63,6 +63,12 @@ export interface BlankBotAPI {
   // Anti-Bot & Captcha
   requestSensorToken: (retailer: string) => Promise<string>;
   solvePerimeterX: (url: string, pxPayload: any) => Promise<string>;
+  testAutoSolve: (
+    apiKey?: string,
+    accessToken?: string
+  ) => Promise<{ success: boolean; message: string; connectedAt?: number; accountEmail?: string }>;
+  getAutoSolveStatus: () => Promise<{ isConnected: boolean; hasCredentials: boolean }>;
+  solveWithAutoSolve: (request: any) => Promise<string>;
 
   // Integrations (Discord, Audio)
   sendDiscordWebhook: (

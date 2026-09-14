@@ -15,11 +15,12 @@
 6. [The Beginner’s Guide to Proxies](#6-the-beginners-guide-to-proxies)
 7. [Automating 2FA with Gmail App Passwords](#7-automating-2fa-with-gmail-app-passwords)
 8. [Captcha Harvesters: How to Get 0.90 Human Scores](#8-captcha-harvesters-how-to-get-090-human-scores)
-9. [The Freebies & Pricing Glitch Sniper](#9-the-freebies--pricing-glitch-sniper)
-10. [Address Jigging & Virtual Credit Cards (VCCs)](#10-address-jigging--virtual-credit-cards-vccs)
-11. [Sound Packs & Discord Remote Control](#11-sound-packs--discord-remote-control)
-12. [Troubleshooting & Error Code Glossary](#12-troubleshooting--error-code-glossary)
-13. [Frequently Asked Questions (FAQ)](#13-frequently-asked-questions-faq)
+9. [AYCD Toolbox Integration (AutoSolve & Profile Builder)](#9-aycd-toolbox-integration-autosolve--profile-builder)
+10. [The Freebies & Pricing Glitch Sniper](#10-the-freebies--pricing-glitch-sniper)
+11. [Address Jigging & Virtual Credit Cards (VCCs)](#11-address-jigging--virtual-credit-cards-vccs)
+12. [Sound Packs & Discord Remote Control](#12-sound-packs--discord-remote-control)
+13. [Troubleshooting & Error Code Glossary](#13-troubleshooting--error-code-glossary)
+14. [Frequently Asked Questions (FAQ)](#14-frequently-asked-questions-faq)
 
 ---
 
@@ -203,7 +204,68 @@ Google rates every browser session on a score from **0.10 to 0.90**:
 
 ---
 
-## 9. The Freebies & Pricing Glitch Sniper
+## 9. AYCD Toolbox Integration (AutoSolve & Profile Builder)
+
+For advanced users and power botters, Blank includes native **1:1 integration with AYCD Toolbox**—the industry-standard companion platform used across high-frequency retail automation.
+
+Blank provides direct, seamless interoperability with two major AYCD tools:
+1. **AYCD AutoSolve / OneClick**: Automatically solves reCAPTCHA v2, reCAPTCHA v3, Cloudflare Turnstile, and hCaptcha challenges using your OneClick account farm.
+2. **AYCD Profile Builder**: Instantly imports and exports your checkout profiles, shipping addresses, and virtual cards with hardware-level AES-256-GCM encryption.
+
+---
+
+### Part A: Connecting AYCD AutoSolve (OneClick)
+
+AYCD AutoSolve connects Blank Bot directly to your running **AYCD OneClick** desktop application so you never have to manually solve puzzles during high-heat drops.
+
+#### Step 1: Find Your Credentials in AYCD OneClick
+1. Open your **AYCD OneClick** desktop application.
+2. Click on **Settings** (gear icon) on the top bar.
+3. Select the **AutoSolve** tab.
+4. You will see two credentials:
+   - **AutoSolve API Key**
+   - **AutoSolve Access Token** (Click "Show" or "Generate" to copy it).
+
+#### Step 2: Enter & Test Credentials in Blank
+1. In Blank Bot, open the **Captchas** tab from the left sidebar.
+2. Scroll down to the **AYCD AutoSolve & OneClick Integration** card.
+3. Paste your **AutoSolve API Key** and **AutoSolve Access Token**.
+4. Click the green **"Test AutoSolve Connection"** button.
+5. Blank will ping your AutoSolve endpoint and display:  
+   `✓ Connected to AYCD OneClick successfully! (Account Verified)`
+6. Ensure the checkbox **"Auto-route checkout challenge tokens to AYCD OneClick during drops"** is enabled.
+7. Click **"Save Solver API Keys"**.
+
+#### How Drops Work With AutoSolve Enabled:
+- When a task encounters a captcha challenge during checkout (such as Best Buy queue verification or Walmart human check), Blank sends an asynchronous token request to your AYCD OneClick instance.
+- OneClick routes the request to your best-scoring farmed Google accounts (0.90 trust score).
+- OneClick returns the solved token to Blank within **200ms to 400ms**, allowing the checkout to finalize seamlessly without human interaction.
+
+---
+
+### Part B: Syncing Profiles With AYCD Profile Builder
+
+If you maintain tens or hundreds of shipping addresses and virtual cards (Privacy.com, Capital One Eno, Revolut) in AYCD Profile Builder, you can import them into Blank in 5 seconds.
+
+#### How to Import From AYCD:
+1. In **AYCD Profile Builder**, select your profiles or profile category and click **Export**. Choose either `.json` or `.csv`.
+2. In Blank Bot, go to the **Profiles** tab on the left sidebar.
+3. Click the purple/indigo **"AYCD Toolbox Sync"** button at the top.
+4. Drag and drop your exported AYCD file into the upload zone (or paste the JSON/CSV text directly).
+5. Blank immediately parses the file and presents a clean preview table of your profiles, recipient names, addresses, and card brands.
+6. Click **"Import All Profiles"**.
+7. Blank runs local client-side **AES-256-GCM hardware encryption** on every card number (PAN) and CVV before saving them into your secure local vault.
+
+#### How to Export to AYCD:
+- Blank also supports bidirectional export! If you create or jig profiles inside Blank and want to use them in other tools:
+  1. Open the **"AYCD Toolbox Sync"** modal in Blank.
+  2. Click the **"Export to AYCD"** tab.
+  3. Click **"Download AYCD JSON File"** (or **"Copy to Clipboard"**).
+  4. Import that file directly into AYCD Profile Builder or any compatible tool.
+
+---
+
+## 10. The Freebies & Pricing Glitch Sniper
 
 Retailers and third-party sellers occasionally make pricing mistakes—such as listing a \$100 gaming headset for \$0.00, or stacking promo codes that take 95% off.
 
@@ -216,7 +278,7 @@ Retailers and third-party sellers occasionally make pricing mistakes—such as l
 
 ---
 
-## 10. Address Jigging & Virtual Credit Cards (VCCs)
+## 11. Address Jigging & Virtual Credit Cards (VCCs)
 
 Retailers frequently impose **"Limit 1 Per Customer"** rules on popular items. If you buy 3 items to the same name and address with the same card, the store will cancel all 3 orders.
 
@@ -238,7 +300,7 @@ Assign a different VCC to each profile in Blank so your transactions are never l
 
 ---
 
-## 11. Sound Packs & Discord Remote Control
+## 12. Sound Packs & Discord Remote Control
 
 ### 6 Real-Time Synthesized Sound Packs
 Blank doesn't rely on external `.wav` files that can get lost or deleted. It synthesizes audio in real-time:
@@ -260,7 +322,7 @@ Preview and choose your favorite in the **Settings** tab!
 
 ---
 
-## 12. Troubleshooting & Error Code Glossary
+## 13. Troubleshooting & Error Code Glossary
 
 | Error Code | What Happened | How to Fix It |
 | :--- | :--- | :--- |
@@ -273,7 +335,7 @@ Preview and choose your favorite in the **Settings** tab!
 
 ---
 
-## 13. Frequently Asked Questions (FAQ)
+## 14. Frequently Asked Questions (FAQ)
 
 #### Q: Is Blank free to use?
 **A:** Yes. Blank is completely free and unrestricted. There are zero subscription keys, zero seat locks, and unlimited task creation.

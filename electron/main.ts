@@ -7,6 +7,7 @@ import { taskEngine } from './engine/task-engine';
 import { imapWorker } from './services/imap-worker';
 import { pingProxy, benchmarkProxyPool } from './services/proxy-tester';
 import { antiBotEngine } from './services/antibot';
+import { aycdService } from './services/aycd';
 import { sendDiscordCheckoutWebhook } from './services/discord';
 import { audioService } from './services/audio';
 import { exportBackupToFile, importBackupFromFile } from './services/storage';
@@ -173,6 +174,22 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('antibot:solve-px', async (_, url: string) => {
     return antiBotEngine.solveWalmartPerimeterX(url);
+  });
+
+  // AYCD AutoSolve Integration
+  ipcMain.handle(
+    'aycd:test-connection',
+    async (_, { apiKey, accessToken }: { apiKey?: string; accessToken?: string }) => {
+      return aycdService.testConnection(apiKey, accessToken);
+    }
+  );
+
+  ipcMain.handle('aycd:get-status', async () => {
+    return aycdService.getStatus();
+  });
+
+  ipcMain.handle('aycd:solve', async (_, request: any) => {
+    return aycdService.solveCaptcha(request);
   });
 
   // Discord & Audio

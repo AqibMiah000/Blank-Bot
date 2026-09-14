@@ -158,6 +158,9 @@ export interface SolverKeys {
   twoCaptcha?: string;
   capSolver?: string;
   antiCaptcha?: string;
+  aycdApiKey?: string;
+  aycdAccessToken?: string;
+  aycdAutoRoute?: boolean;
 }
 
 export type ThemeId =

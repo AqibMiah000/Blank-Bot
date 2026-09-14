@@ -56,6 +56,12 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
     ipcRenderer.invoke('antibot:sensor-token', retailer),
   solvePerimeterX: (url: string, pxPayload: any) =>
     ipcRenderer.invoke('antibot:solve-px', url, pxPayload),
+  testAutoSolve: (apiKey?: string, accessToken?: string) =>
+    ipcRenderer.invoke('aycd:test-connection', { apiKey, accessToken }),
+  getAutoSolveStatus: () =>
+    ipcRenderer.invoke('aycd:get-status'),
+  solveWithAutoSolve: (request: any) =>
+    ipcRenderer.invoke('aycd:solve', request),
 
   // Discord & Audio
   sendDiscordWebhook: (url: string, payload: any) =>

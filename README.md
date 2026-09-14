@@ -29,6 +29,7 @@
 | :--- | :--- | :---: |
 | **Direct Protocol Checkout** | Sub-second checkout via HTTP/2 and raw TLS client-hello emulation (`got-scraping`). | ✅ Active |
 | **Multi-Retailer Engine** | Native checkout workflows for **Amazon US, Best Buy, Walmart, Target, and Apple**. | ✅ Active |
+| **AYCD Toolbox Integration** | 1:1 integration with AYCD AutoSolve (OneClick) & Profile Builder (JSON/CSV bidirectional sync). | ✅ Active |
 | **Mass SKU Multiplier** | Paste 50+ SKUs at once with automatic round-robin profile allocation. | ✅ Active |
 | **Native Captcha Harvesters** | Floating persistent browser windows for Google 0.90 trust score and YouTube warming. | ✅ Active |
 | **Automated IMAP 2FA** | Background SSL worker retrieves 6-digit email OTPs in `<200ms` hands-free. | ✅ Active |
@@ -46,14 +47,14 @@
 flowchart TD
     subgraph UI ["React 19 + Vite Renderer"]
         A[Tasks & Groups] --> B[Mass Multiplier Modal]
-        C[Captcha Harvesters] --> D[Session Warmer]
-        E[9 Stealth Themes] --> F[Live Freebies Feed]
+        C[Captcha Harvesters] --> D[AYCD AutoSolve Bridge]
+        E[AYCD Profile Sync] --> F[Live Freebies Feed]
     end
 
     subgraph Core ["Electron Main Process (Node.js)"]
         G[Task Engine] --> H[TLS Fingerprint Client]
         I[IMAP 2FA Worker] --> J[Crypto Vault AES-256]
-        K[Proxy Tester] --> L[Discord Webhooks]
+        K[Proxy Tester] --> L[AYCD OneClick Gateway]
         M[Harvester Windows] --> N[Audio Synthesizer]
     end
 

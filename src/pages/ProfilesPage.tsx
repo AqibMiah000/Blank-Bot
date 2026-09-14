@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, CreditCard, Sparkles, Trash2, Edit2, ShieldCheck, MapPin } from 'lucide-react';
+import { Plus, CreditCard, Sparkles, Trash2, Edit2, ShieldCheck, MapPin, Upload } from 'lucide-react';
 import { BillingProfile } from '../types';
 import { ProfileModal } from '../components/ProfileModal';
 import { AddressJigModal } from '../components/AddressJigModal';
+import { AYCDImportModal } from '../components/AYCDImportModal';
 
 interface ProfilesPageProps {
   profiles: BillingProfile[];
@@ -17,12 +18,19 @@ export const ProfilesPage: React.FC<ProfilesPageProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isJigOpen, setIsJigOpen] = useState(false);
+  const [isAYCDModalOpen, setIsAYCDModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<BillingProfile | null>(null);
   const [jigBaseAddress, setJigBaseAddress] = useState<any>(null);
 
   const handleOpenJig = (baseAddress: any) => {
     setJigBaseAddress(baseAddress);
     setIsJigOpen(true);
+  };
+
+  const handleImportAYCDProfiles = async (newProfiles: BillingProfile[]) => {
+    for (const p of newProfiles) {
+      await onSaveProfile(p);
+    }
   };
 
   return (
@@ -39,6 +47,14 @@ export const ProfilesPage: React.FC<ProfilesPageProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>Create Profile</span>
+          </button>
+          <button
+            onClick={() => setIsAYCDModalOpen(true)}
+            className="px-3.5 py-2 bg-gradient-to-r from-indigo-600/30 to-brand-600/30 hover:from-indigo-600/40 hover:to-brand-600/40 text-brand-200 border border-brand-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+            title="Import or Export profiles with AYCD Profile Builder (JSON & CSV)"
+          >
+            <Upload className="w-4 h-4 text-brand-400" />
+            <span>AYCD Toolbox Sync</span>
           </button>
           <button
             onClick={() => {
@@ -161,6 +177,13 @@ export const ProfilesPage: React.FC<ProfilesPageProps> = ({
         isOpen={isJigOpen}
         onClose={() => setIsJigOpen(false)}
         baseAddress={jigBaseAddress}
+      />
+
+      <AYCDImportModal
+        isOpen={isAYCDModalOpen}
+        onClose={() => setIsAYCDModalOpen(false)}
+        onImportProfiles={handleImportAYCDProfiles}
+        existingProfiles={profiles}
       />
     </div>
   );
