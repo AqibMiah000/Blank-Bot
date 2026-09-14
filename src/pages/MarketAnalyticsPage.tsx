@@ -4,17 +4,12 @@ import {
   RefreshCw,
   Filter,
   Search,
-  ExternalLink,
   Flame,
   Plus,
   ArrowUpRight,
-  Sparkles,
   ChevronDown,
   CheckSquare,
   Square,
-  DollarSign,
-  Activity,
-  Layers,
   Copy,
   Check,
 } from 'lucide-react';
@@ -80,7 +75,7 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
       setLastRefreshedAt(Date.now());
     } finally {
       if (force) {
-        setTimeout(() => setIsRefreshing(false), 500);
+        setTimeout(() => setIsRefreshing(false), 400);
       }
     }
   };
@@ -91,7 +86,7 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
 
   const handleToggleCategory = (cat: MarketCategory) => {
     if (selectedCategories.includes(cat)) {
-      if (selectedCategories.length === 1) return; // keep at least 1
+      if (selectedCategories.length === 1) return; // Keep at least one
       setSelectedCategories(selectedCategories.filter((c) => c !== cat));
     } else {
       setSelectedCategories([...selectedCategories, cat]);
@@ -142,41 +137,41 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
   }, [lastRefreshedAt, isRefreshing]);
 
   return (
-    <div className="flex-1 flex flex-col bg-surface-950 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 flex flex-col bg-surface-950 overflow-y-auto p-5 md:p-6 space-y-5">
       {/* Header Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-surface-900">
         <div>
           <div className="flex items-center space-x-2.5">
-            <h2 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-sm font-bold text-white tracking-wide uppercase flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
               Live Market &amp; TCG Intelligence
             </h2>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-mono">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[10px] font-medium tracking-wide">
               Live Feed
             </span>
           </div>
           <p className="text-xs text-surface-400 mt-1">
-            Real-time secondary market valuations, MSRP profit margins, volume velocity, and 1-click drop task dispatch.
+            Real-time secondary market valuations, MSRP profit margins, volume velocity, and 1-click drop dispatch.
           </p>
         </div>
 
         {/* Action Controls: Refresh & Category Dropdown */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Refresh Button */}
           <button
             type="button"
             onClick={() => loadData(true)}
             disabled={isRefreshing}
-            className="px-3.5 py-2 bg-surface-900 hover:bg-surface-800 border border-surface-800 hover:border-surface-700 text-surface-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-sm group"
-            title="Bypass 3-minute local cache and pull immediate live price ticks"
+            className="h-8 px-3 bg-surface-900 hover:bg-surface-850 border border-surface-800 text-surface-300 hover:text-white rounded-lg text-xs font-medium flex items-center gap-2 transition-all group"
+            title="Force refresh live quotes"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 text-emerald-400 transition-transform ${
                 isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'
               }`}
             />
-            <span>{isRefreshing ? 'Refreshing...' : 'Refresh Live Prices'}</span>
-            <span className="text-[10px] font-mono text-surface-500">({timeAgoString})</span>
+            <span>{isRefreshing ? 'Refreshing' : 'Refresh'}</span>
+            <span className="text-[11px] text-surface-500 font-mono">({timeAgoString})</span>
           </button>
 
           {/* Category Dropdown Multi-Select */}
@@ -184,25 +179,25 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
             <button
               type="button"
               onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-              className="px-3.5 py-2 bg-brand-600/20 hover:bg-brand-600/30 border border-brand-500/40 text-brand-300 rounded-xl text-xs font-bold flex items-center gap-2 transition-all"
+              className="h-8 px-3 bg-surface-900 hover:bg-surface-850 border border-surface-800 text-surface-300 hover:text-white rounded-lg text-xs font-medium flex items-center gap-2 transition-all"
             >
-              <Filter className="w-3.5 h-3.5" />
+              <Filter className="w-3.5 h-3.5 text-surface-400" />
               <span>
                 Categories ({selectedCategories.length === 5 ? 'All' : selectedCategories.length})
               </span>
-              <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              <ChevronDown className="w-3 h-3 text-surface-400" />
             </button>
 
             {isCategoryDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-surface-900 border border-surface-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in fade-in">
-                <div className="px-3 py-1.5 flex items-center justify-between border-b border-surface-800/80 mb-1">
-                  <span className="text-[10px] font-mono uppercase text-surface-400">
-                    Tracked Markets
+              <div className="absolute right-0 mt-2 w-64 bg-surface-900 border border-surface-800 rounded-xl shadow-2xl z-50 p-2 space-y-1">
+                <div className="px-2.5 py-1.5 flex items-center justify-between border-b border-surface-800/80 mb-1">
+                  <span className="text-[10px] uppercase font-semibold text-surface-400 tracking-wider">
+                    Select Categories
                   </span>
                   <button
                     type="button"
                     onClick={handleSelectAllCategories}
-                    className="text-[10px] font-bold text-brand-400 hover:underline"
+                    className="text-[11px] font-semibold text-brand-400 hover:text-brand-300"
                   >
                     Select All
                   </button>
@@ -215,7 +210,7 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
                       key={cat}
                       type="button"
                       onClick={() => handleToggleCategory(cat)}
-                      className="w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between hover:bg-surface-800/70 transition-colors"
+                      className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between hover:bg-surface-850 transition-colors"
                     >
                       <span className={isChecked ? 'text-white font-medium' : 'text-surface-400'}>
                         {CATEGORY_LABELS[cat]}
@@ -234,77 +229,88 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
         </div>
       </div>
 
-      {/* Metrics Banner */}
+      {/* Top 4 Metrics Cards (Clean & Minimal) */}
       {metrics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800">
-            <div className="text-[10px] font-mono text-surface-400 uppercase">Tracked Targets</div>
-            <div className="text-xl font-bold text-white mt-1 font-mono flex items-center gap-2">
-              <span>{filteredItems.length}</span>
-              <span className="text-xs text-surface-500 font-sans font-normal">items</span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800">
-            <div className="text-[10px] font-mono text-surface-400 uppercase">Avg. Resale Spread</div>
-            <div className="text-xl font-bold text-emerald-400 mt-1 font-mono flex items-center gap-1.5">
-              <ArrowUpRight className="w-4 h-4 text-emerald-400" />
-              <span>+{metrics.averageRoi}% ROI</span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800">
-            <div className="text-[10px] font-mono text-surface-400 uppercase">Top Dollar Spread</div>
-            <div className="text-sm font-bold text-brand-300 mt-1 truncate">
-              {metrics.topItem.name}
-            </div>
-            <span className="text-xs font-mono text-emerald-400 font-semibold">
-              +${(metrics.topItem.marketPrice - metrics.topItem.msrp).toFixed(2)} Profit
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-3.5 rounded-xl bg-surface-900/90 border border-surface-800/80 flex flex-col justify-between">
+            <span className="text-[11px] font-medium text-surface-400 uppercase tracking-wider">
+              Tracked Targets
             </span>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-xl font-bold text-white font-mono">{filteredItems.length}</span>
+              <span className="text-xs text-surface-500">items listed</span>
+            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800">
-            <div className="text-[10px] font-mono text-surface-400 uppercase">Ultra High Demand</div>
-            <div className="text-xl font-bold text-rose-400 mt-1 font-mono flex items-center gap-1.5">
-              <Flame className="w-4 h-4 text-rose-400" />
-              <span>{metrics.ultraHighCount} Hot Drops</span>
+          <div className="p-3.5 rounded-xl bg-surface-900/90 border border-surface-800/80 flex flex-col justify-between">
+            <span className="text-[11px] font-medium text-surface-400 uppercase tracking-wider">
+              Avg. Resale Spread
+            </span>
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <span className="text-xl font-bold text-emerald-400 font-mono">+{metrics.averageRoi}%</span>
+              <span className="text-xs text-surface-500">ROI margin</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-surface-900/90 border border-surface-800/80 flex flex-col justify-between">
+            <span className="text-[11px] font-medium text-surface-400 uppercase tracking-wider">
+              Top Dollar Spread
+            </span>
+            <div className="mt-2 flex items-baseline justify-between gap-2 overflow-hidden">
+              <span className="text-xl font-bold text-brand-300 font-mono shrink-0">
+                +${(metrics.topItem.marketPrice - metrics.topItem.msrp).toFixed(0)}
+              </span>
+              <span className="text-xs text-surface-400 truncate text-right" title={metrics.topItem.name}>
+                {metrics.topItem.name.replace(/NVIDIA GeForce /i, '')}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-surface-900/90 border border-surface-800/80 flex flex-col justify-between">
+            <span className="text-[11px] font-medium text-surface-400 uppercase tracking-wider">
+              High Demand
+            </span>
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <Flame className="w-4 h-4 text-rose-400 self-center" />
+              <span className="text-xl font-bold text-rose-400 font-mono">{metrics.ultraHighCount}</span>
+              <span className="text-xs text-surface-500">hot drops</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Filter and Search Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-900/60 p-3 rounded-2xl border border-surface-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-surface-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-surface-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search items, sets, ASINs or SKUs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface-950 border border-surface-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-surface-600 focus:border-brand-500 outline-none font-mono"
+            className="w-full h-8.5 bg-surface-900 border border-surface-800 rounded-lg pl-8.5 pr-3 text-xs text-slate-100 placeholder:text-surface-500 focus:border-brand-500/60 outline-none"
           />
         </div>
 
-        <div className="flex items-center space-x-2 self-end sm:self-auto">
-          <span className="text-xs font-semibold text-surface-400 font-mono text-[11px] uppercase">
+        <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
+          <span className="text-[11px] font-medium text-surface-400 uppercase tracking-wider">
             Sort:
           </span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-surface-950 border border-surface-800 rounded-xl px-3 py-1.5 text-xs text-white font-mono focus:border-brand-500 outline-none cursor-pointer"
+            className="h-8.5 bg-surface-900 border border-surface-800 rounded-lg px-2.5 text-xs text-slate-200 outline-none cursor-pointer focus:border-brand-500/60"
           >
             <option value="roi">Highest ROI (%)</option>
-            <option value="profit">Highest Gross Margin ($)</option>
-            <option value="price_high">Market Price (High &rarr; Low)</option>
-            <option value="price_low">MSRP (Low &rarr; High)</option>
+            <option value="profit">Highest Profit Margin ($)</option>
+            <option value="price_high">Market Price (High to Low)</option>
+            <option value="price_low">MSRP (Low to High)</option>
           </select>
         </div>
       </div>
 
       {/* Market Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
         {filteredItems.map((item) => {
           const profit = item.marketPrice - item.msrp;
           const roi = Math.round((profit / item.msrp) * 100);
@@ -312,90 +318,91 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
           return (
             <div
               key={item.id}
-              className="bg-surface-900 border border-surface-800 hover:border-brand-500/40 rounded-2xl p-4.5 space-y-3.5 transition-all shadow-lg hover:shadow-brand-500/5 group flex flex-col justify-between"
+              className="bg-surface-900/80 hover:bg-surface-900 border border-surface-800/80 hover:border-surface-700/80 rounded-xl p-4 flex flex-col justify-between space-y-3 transition-colors shadow-sm"
             >
               <div className="space-y-2.5">
-                {/* Header Badge Row */}
+                {/* Header Badges */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-surface-800 text-surface-300 uppercase font-semibold">
+                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-surface-800/70 text-surface-300">
                     {CATEGORY_LABELS[item.category]}
                   </span>
 
-                  <div className="flex items-center space-x-1.5">
+                  <div className="flex items-center gap-1.5">
                     {item.demand === 'ultra_high' && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">
-                        <Flame className="w-3 h-3 text-rose-400" />
-                        <span>High Demand</span>
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+                        <Flame className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>Hot</span>
                       </span>
                     )}
-                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-300 font-bold">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-surface-800 text-surface-300 border border-surface-700/50">
                       {item.retailer}
                     </span>
                   </div>
                 </div>
 
-                {/* Item Title & Series */}
+                {/* Title & Series */}
                 <div>
-                  <h3 className="text-xs font-bold text-white group-hover:text-brand-300 transition-colors line-clamp-2">
+                  <h3
+                    className="text-xs font-semibold text-slate-100 leading-snug line-clamp-1"
+                    title={item.name}
+                  >
                     {item.name}
                   </h3>
-                  <span className="text-[11px] text-surface-400 font-mono block mt-0.5">
+                  <span className="text-[11px] text-surface-400 block mt-0.5 truncate">
                     {item.setOrSeries}
                   </span>
                 </div>
 
-                {/* Pricing Spread Card */}
-                <div className="grid grid-cols-3 gap-2 p-3 bg-surface-950/80 rounded-xl border border-surface-800/80 text-center">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase text-surface-500 block">
-                      MSRP
-                    </span>
-                    <span className="text-xs font-bold text-slate-300 font-mono">
-                      ${item.msrp.toFixed(2)}
-                    </span>
+                {/* Clean, Spacious Pricing Breakdown (Zero Overflow) */}
+                <div className="bg-surface-950/70 rounded-lg p-2.5 border border-surface-800/50 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-surface-400">MSRP</span>
+                      <span className="font-semibold text-slate-300 font-mono">
+                        ${item.msrp.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-surface-400">Market</span>
+                      <span className="font-bold text-white font-mono">
+                        ${item.marketPrice.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
 
-                  <div>
-                    <span className="text-[10px] font-mono uppercase text-surface-500 block">
-                      Market
+                  <div className="flex items-center justify-between pt-1.5 border-t border-surface-850">
+                    <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-0.5">
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <span>+{roi}% ROI</span>
                     </span>
-                    <span className="text-xs font-bold text-white font-mono">
-                      ${item.marketPrice.toFixed(2)}
-                    </span>
-                  </div>
 
-                  <div>
-                    <span className="text-[10px] font-mono uppercase text-emerald-400 block">
-                      Est. Profit
-                    </span>
-                    <span className="text-xs font-bold text-emerald-400 font-mono">
-                      +${profit.toFixed(2)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-emerald-400 font-mono">
+                        +${profit.toFixed(2)}
+                      </span>
+                      {item.volume24h && (
+                        <span className="text-[10px] text-surface-500 font-mono">
+                          ({item.volume24h})
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                {/* Profit ROI & Volume Footer */}
-                <div className="flex items-center justify-between text-[11px] font-mono text-surface-400 px-0.5">
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                    <span>+{roi}% ROI</span>
-                  </span>
-                  {item.volume24h && <span>{item.volume24h}</span>}
                 </div>
               </div>
 
               {/* Bottom Actions: Identifier & 1-Click Task Creation */}
-              <div className="pt-2 border-t border-surface-800/80 flex items-center justify-between gap-2">
+              <div className="pt-2 border-t border-surface-800/60 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => handleCopyIdentifier(item.id, item.identifier)}
-                  className="px-2.5 py-1.5 bg-surface-950 hover:bg-surface-800 border border-surface-800 rounded-lg text-[10px] font-mono text-surface-300 flex items-center gap-1.5 transition-all"
-                  title="Copy ASIN or SKU"
+                  className="h-7.5 px-2.5 bg-surface-950/80 hover:bg-surface-800/80 border border-surface-800/60 rounded-lg text-[11px] font-mono text-surface-400 hover:text-slate-200 flex items-center gap-1.5 transition-colors"
+                  title="Click to copy identifier"
                 >
                   {copiedId === item.id ? (
-                    <Check className="w-3 h-3 text-emerald-400" />
+                    <Check className="w-3 h-3 text-emerald-400 shrink-0" />
                   ) : (
-                    <Copy className="w-3 h-3" />
+                    <Copy className="w-3 h-3 text-surface-500 shrink-0" />
                   )}
                   <span>{item.identifier}</span>
                 </button>
@@ -413,9 +420,9 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
                       });
                     }
                   }}
-                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-brand-500/20 transition-all hover:scale-[1.02]"
+                  className="h-7.5 px-3 bg-brand-500/15 hover:bg-brand-500/25 border border-brand-500/30 hover:border-brand-500/50 text-brand-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5 text-brand-400" />
                   <span>Create Task</span>
                 </button>
               </div>
@@ -426,3 +433,4 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
     </div>
   );
 };
+
