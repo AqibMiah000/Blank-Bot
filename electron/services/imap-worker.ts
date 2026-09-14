@@ -146,8 +146,8 @@ export class IMAPWorker extends EventEmitter {
    * High-speed Regex OTP Parser
    * Evaluates subject & body against high-probability retail OTP signatures
    */
-  public extractOtpCode(text: string): string | null {
-    if (!text) return null;
+  public extractOtpCode(text: string): string {
+    if (!text) return '';
 
     // Pattern 1: Explicit retail OTP patterns
     const patterns = [
@@ -164,7 +164,7 @@ export class IMAPWorker extends EventEmitter {
       }
     }
 
-    return null;
+    return '';
   }
 
   /**

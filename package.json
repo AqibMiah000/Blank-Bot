@@ -13,6 +13,7 @@
     "build:electron": "node scripts/generate-icon.cjs && npm run compile:electron && vite build && electron-builder --win --dir && node scripts/apply-icon.cjs",
     "compile:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --outfile=dist-electron/main.js --external:electron --external:got-scraping --external:imapflow && esbuild electron/preload.ts --bundle --platform=node --format=cjs --outfile=dist-electron/preload.cjs --external:electron",
     "test:verify": "tsx scripts/verify-core.ts",
+    "test:artificial": "tsx scripts/artificial-tests.ts",
     "generate-icon": "node scripts/generate-icon.cjs"
   },
   "keywords": [

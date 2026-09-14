@@ -650,16 +650,22 @@ export function getMarketAnalytics(forceRefresh: boolean = false): {
   const combined = [...customItems, ...cachedItems];
 
   let totalRoi = 0;
-  let topItem = combined[0];
+  let topItem = combined[0] || null;
   let maxProfit = 0;
   let ultraHighCount = 0;
 
   for (const item of combined) {
     const profit = item.marketPrice - item.msrp;
-    const roi = (profit / item.msrp) * 100;
-    totalRoi += roi;
+    // Safeguard against $0 MSRP glitch items to avoid division by zero (Infinity)
+    const roi = item.msrp > 0 
+      ? (profit / item.msrp) * 100 
+      : (item.marketPrice > 0 ? 100 : 0);
 
-    if (profit > maxProfit) {
+    if (Number.isFinite(roi)) {
+      totalRoi += roi;
+    }
+
+    if (profit > maxProfit || !topItem) {
       maxProfit = profit;
       topItem = item;
     }
@@ -669,14 +675,26 @@ export function getMarketAnalytics(forceRefresh: boolean = false): {
     }
   }
 
-  const averageRoi = Math.round(totalRoi / combined.length);
+  const averageRoi = combined.length > 0 ? Math.round(totalRoi / combined.length) : 0;
 
   return {
     items: combined,
     metrics: {
       totalTracked: combined.length,
-      averageRoi,
-      topItem: topItem || combined[0],
+      averageRoi: Number.isFinite(averageRoi) ? averageRoi : 0,
+      topItem: topItem || {
+        id: 'default-top',
+        name: 'No active items',
+        setOrSeries: 'General',
+        category: 'pokemon',
+        retailer: 'amazon',
+        identifier: '0',
+        msrp: 0,
+        marketPrice: 0,
+        volume24h: '0 sales',
+        demand: 'moderate',
+        lastUpdated: Date.now(),
+      },
       ultraHighCount,
       lastUpdated: lastFetchEpoch,
     },

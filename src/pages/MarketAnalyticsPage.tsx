@@ -204,8 +204,8 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
       .sort((a, b) => {
         const profitA = a.marketPrice - a.msrp;
         const profitB = b.marketPrice - b.msrp;
-        const roiA = (profitA / a.msrp) * 100;
-        const roiB = (profitB / b.msrp) * 100;
+        const roiA = a.msrp > 0 ? (profitA / a.msrp) * 100 : (a.marketPrice > 0 ? 100 : 0);
+        const roiB = b.msrp > 0 ? (profitB / b.msrp) * 100 : (b.marketPrice > 0 ? 100 : 0);
 
         if (sortBy === 'profit') return profitB - profitA;
         if (sortBy === 'roi') return roiB - roiA;
@@ -432,7 +432,9 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredItems.map((item) => {
           const profit = item.marketPrice - item.msrp;
-          const roi = Math.round((profit / item.msrp) * 100);
+          const roi = item.msrp > 0 
+            ? Math.round((profit / item.msrp) * 100) 
+            : (item.marketPrice > 0 ? 100 : 0);
           const retailerCfg = RETAILER_CONFIG[item.retailer] || {
             label: item.retailer,
             text: 'text-surface-300',
