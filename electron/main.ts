@@ -266,7 +266,7 @@ function registerIpcHandlers(): void {
         width: 480,
         height: 640,
         title: `Blank Harvester — Slot #${id}`,
-        backgroundColor: '#0a0a0c',
+        backgroundColor: '#ffffff',
         autoHideMenuBar: true,
         webPreferences: {
           session: sess,
@@ -277,6 +277,65 @@ function registerIpcHandlers(): void {
       });
 
       harvesterWin.setMenuBarVisibility(false);
+
+      // Guarantee proper light background and high contrast text for captcha demo & challenge pages
+      harvesterWin.webContents.on('did-finish-load', async () => {
+        try {
+          if (harvesterWin.isDestroyed()) return;
+          const currentUrl = harvesterWin.webContents.getURL().toLowerCase();
+          if (
+            currentUrl.includes('recaptcha') ||
+            currentUrl.includes('turnstile') ||
+            currentUrl.includes('peet.ws') ||
+            currentUrl.includes('hcaptcha')
+          ) {
+            await harvesterWin.webContents.insertCSS(`
+              html, body {
+                background-color: #ffffff !important;
+                color: #111827 !important;
+                color-scheme: light !important;
+              }
+              fieldset {
+                border: 1px solid #d1d5db !important;
+                padding: 14px !important;
+                border-radius: 8px !important;
+                margin-bottom: 12px !important;
+              }
+              legend {
+                color: #111827 !important;
+                font-weight: 600 !important;
+                padding: 0 6px !important;
+              }
+              h1, h2, h3, h4, p, label, span, div {
+                color: #111827 !important;
+              }
+              input[type="text"], input[type="email"], input[type="password"] {
+                background-color: #ffffff !important;
+                color: #111827 !important;
+                border: 1px solid #9ca3af !important;
+                border-radius: 6px !important;
+                padding: 6px 10px !important;
+                color-scheme: light !important;
+              }
+              input[type="submit"], button {
+                background-color: #2563eb !important;
+                color: #ffffff !important;
+                border: none !important;
+                border-radius: 6px !important;
+                padding: 8px 16px !important;
+                cursor: pointer !important;
+                font-weight: 600 !important;
+              }
+              a {
+                color: #0284c7 !important;
+              }
+            `);
+          }
+        } catch {
+          // Window may have closed before injection
+        }
+      });
+
       const initialUrl = targetUrl || 'https://accounts.google.com';
       await harvesterWin.loadURL(initialUrl);
 

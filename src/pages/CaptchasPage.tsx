@@ -463,7 +463,17 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
                     }`}
                   />
                   <span className="text-xs font-bold text-white">{slot.name}</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-surface-800 text-surface-300 uppercase">
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-md uppercase font-semibold ${
+                      slot.target === 'recaptcha'
+                        ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                        : slot.target === 'turnstile'
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        : slot.target === 'youtube'
+                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                        : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    }`}
+                  >
                     {slot.target}
                   </span>
                 </div>
@@ -518,16 +528,16 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
                 </button>
                 <button
                   onClick={() => handleOpenHarvester(slot, 'recaptcha')}
-                  className="px-2 py-1.5 bg-surface-950 hover:bg-surface-800 border border-surface-800 hover:border-surface-700 rounded-lg text-[11px] font-semibold text-slate-200 flex items-center justify-center gap-1 transition-all"
+                  className="px-2 py-1.5 bg-surface-950 hover:bg-surface-800 border border-surface-800 hover:border-blue-500/40 rounded-lg text-[11px] font-semibold text-slate-200 hover:text-blue-300 flex items-center justify-center gap-1 transition-all"
                 >
-                  <ShieldCheck className="w-3 h-3 text-brand-400" />
+                  <ShieldCheck className="w-3 h-3 text-blue-400" />
                   <span>ReCaptcha</span>
                 </button>
                 <button
                   onClick={() => handleOpenHarvester(slot, 'turnstile')}
-                  className="px-2 py-1.5 bg-surface-950 hover:bg-surface-800 border border-surface-800 hover:border-surface-700 rounded-lg text-[11px] font-semibold text-slate-200 flex items-center justify-center gap-1 transition-all"
+                  className="px-2 py-1.5 bg-surface-950 hover:bg-surface-800 border border-surface-800 hover:border-amber-500/40 rounded-lg text-[11px] font-semibold text-slate-200 hover:text-amber-300 flex items-center justify-center gap-1 transition-all"
                 >
-                  <Zap className="w-3 h-3 text-cyan-400" />
+                  <Zap className="w-3 h-3 text-amber-400" />
                   <span>Turnstile</span>
                 </button>
               </div>
