@@ -12,6 +12,9 @@ import {
   Palette,
   Sliders,
   Gift,
+  ExternalLink,
+  Zap,
+  RefreshCw,
 } from 'lucide-react';
 import { AppSettings, ThemeId, SoundPackId } from '../types';
 import {
@@ -62,6 +65,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   );
   const [defaultRetryDelay, setDefaultRetryDelay] = useState(settings.defaultRetryDelay || 2000);
 
+  // AYCD AutoSolve settings
+  const [aycdApiKey, setAycdApiKey] = useState(settings.solverKeys?.aycdApiKey || '');
+  const [aycdAccessToken, setAycdAccessToken] = useState(settings.solverKeys?.aycdAccessToken || '');
+  const [aycdAutoRoute, setAycdAutoRoute] = useState(settings.solverKeys?.aycdAutoRoute ?? true);
+  const [isTestingAutoSolve, setIsTestingAutoSolve] = useState(false);
+  const [autoSolveResult, setAutoSolveResult] = useState<{ success: boolean; message: string } | null>(null);
+
   // IMAP settings
   const [imapEmail, setImapEmail] = useState('');
   const [imapPassword, setImapPassword] = useState('');
@@ -78,6 +88,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     localStorage.setItem('blank_theme', t);
     if (onThemeChange) {
       onThemeChange(t);
+    }
+  };
+
+  const handleTestAutoSolve = async () => {
+    if (!aycdApiKey.trim() || !aycdAccessToken.trim()) {
+      setAutoSolveResult({
+        success: false,
+        message: 'Please enter both AYCD AutoSolve API Key and Access Token first.',
+      });
+      return;
+    }
+
+    setIsTestingAutoSolve(true);
+    setAutoSolveResult(null);
+    try {
+      if (window.blankBotAPI?.testAutoSolve) {
+        const res = await window.blankBotAPI.testAutoSolve(
+          aycdApiKey.trim(),
+          aycdAccessToken.trim()
+        );
+        setAutoSolveResult(res);
+      } else {
+        setAutoSolveResult({
+          success: true,
+          message: 'Connected to AYCD OneClick successfully! (Simulation Mode)',
+        });
+      }
+    } catch (err: any) {
+      setAutoSolveResult({
+        success: false,
+        message: err?.message || 'Failed to connect to AYCD AutoSolve.',
+      });
+    } finally {
+      setIsTestingAutoSolve(false);
     }
   };
 
@@ -98,6 +142,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         encryptionPassphrase: encryptionPassphrase.trim(),
         defaultMonitorDelay,
         defaultRetryDelay,
+        solverKeys: {
+          ...settings.solverKeys,
+          aycdApiKey: aycdApiKey.trim(),
+          aycdAccessToken: aycdAccessToken.trim(),
+          aycdAutoRoute,
+        },
       });
     } finally {
       setIsSaving(false);
@@ -517,6 +567,122 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             {imapStatusMsg && (
               <span className="text-xs font-mono text-cyan-300">{imapStatusMsg}</span>
             )}
+          </div>
+        </div>
+
+        {/* AYCD AutoSolve & OneClick Integration */}
+        <div className="bg-surface-900 border border-brand-500/40 ring-1 ring-brand-500/20 rounded-2xl p-5 space-y-4 shadow-xl shadow-brand-500/5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center space-x-2.5">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    aycdApiKey && aycdAccessToken
+                      ? 'bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400'
+                      : 'bg-amber-400'
+                  }`}
+                />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>AYCD AutoSolve &amp; OneClick Integration</span>
+                  <span className="px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300 text-[10px] font-mono normal-case">
+                    Toolbox Native
+                  </span>
+                </h3>
+              </div>
+              <p className="text-[11px] text-surface-400 mt-1">
+                Route high-frequency checkout captchas (reCAPTCHA v2/v3, Turnstile, hCaptcha) directly to your AYCD OneClick desktop app.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (window.blankBotAPI?.openExternal) {
+                  window.blankBotAPI.openExternal('https://aycd.io/account');
+                } else {
+                  window.open('https://aycd.io/account', '_blank');
+                }
+              }}
+              className="px-3 py-1.5 bg-surface-800 hover:bg-surface-700 text-surface-300 hover:text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto transition-all border border-surface-700"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-brand-400" />
+              <span>AYCD Dashboard</span>
+            </button>
+          </div>
+
+          {autoSolveResult && (
+            <div
+              className={`p-3 rounded-xl border text-xs font-mono flex items-center gap-2.5 ${
+                autoSolveResult.success
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+              }`}
+            >
+              {autoSolveResult.success ? (
+                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <Zap className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span>{autoSolveResult.message}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1">
+                AutoSolve API Key
+              </label>
+              <input
+                type="password"
+                placeholder="Paste AYCD AutoSolve API Key..."
+                value={aycdApiKey}
+                onChange={(e) => setAycdApiKey(e.target.value)}
+                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:border-brand-500 outline-none"
+              />
+              <span className="text-[10px] text-surface-500 mt-1 block font-mono">
+                AYCD OneClick &rarr; Settings &rarr; AutoSolve
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1">
+                AutoSolve Access Token
+              </label>
+              <input
+                type="password"
+                placeholder="Paste AYCD AutoSolve Access Token..."
+                value={aycdAccessToken}
+                onChange={(e) => setAycdAccessToken(e.target.value)}
+                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:border-brand-500 outline-none"
+              />
+              <span className="text-[10px] text-surface-500 mt-1 block font-mono">
+                Generated in AYCD OneClick AutoSolve tab
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={aycdAutoRoute}
+                onChange={(e) => setAycdAutoRoute(e.target.checked)}
+                className="w-4 h-4 rounded border-surface-700 bg-surface-950 text-brand-600 focus:ring-brand-500/20"
+              />
+              <span className="text-xs font-medium text-surface-300">
+                Auto-route checkout challenge tokens to AYCD OneClick during drops
+              </span>
+            </label>
+
+            <button
+              type="button"
+              onClick={handleTestAutoSolve}
+              disabled={isTestingAutoSolve}
+              className="px-4 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-2 transition-all self-start sm:self-auto"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isTestingAutoSolve ? 'animate-spin' : ''}`} />
+              <span>{isTestingAutoSolve ? 'Testing...' : 'Test AutoSolve Connection'}</span>
+            </button>
           </div>
         </div>
 
