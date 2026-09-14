@@ -69,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 BLANK
               </div>
               <div className="text-[10px] text-surface-400 font-mono tracking-tight">
-                v1.2.0 • HIGH-FREQUENCY
+                v1.20.0 • HIGH-FREQUENCY
               </div>
             </div>
           </div>

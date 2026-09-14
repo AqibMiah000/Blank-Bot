@@ -35,7 +35,7 @@ export async function sendDiscordCheckoutWebhook(
       ...(data.orderId ? [{ name: '📦 Order #', value: `\`${data.orderId}\``, inline: false }] : []),
     ],
     footer: {
-      text: 'Blank Bot v1.2.0 • Free & Open-Source Desktop Suite',
+      text: 'Blank Bot v1.20 • Free & Open-Source Desktop Suite',
     },
     timestamp: new Date().toISOString(),
   };
