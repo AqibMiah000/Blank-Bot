@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Square, Mail, Shield, Bell } from 'lucide-react';
+import { Play, Square, Mail, Shield, Bell, Wifi, WifiOff } from 'lucide-react';
 import { SystemStats } from '../types';
 
 interface HeaderProps {
@@ -19,6 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggle2FADrawer,
   pending2FACount,
 }) => {
+  const isOnline = stats.networkStatus?.isOnline !== false;
+
   return (
     <header className="h-13 bg-surface-900/60 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
       {/* Title */}
@@ -30,6 +32,36 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center space-x-4">
         {/* Metric Badges */}
         <div className="flex items-center space-x-2 text-xs font-mono">
+          {/* Live Network Connectivity Badge */}
+          <div
+            className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
+              isOnline
+                ? 'bg-surface-850'
+                : 'bg-rose-950/90 border border-rose-500/60 text-rose-300 animate-pulse'
+            }`}
+            title={
+              isOnline
+                ? `Internet Connection Active (${stats.networkStatus?.latencyMs ?? 15}ms latency)`
+                : 'No Internet Connection Detected'
+            }
+          >
+            {isOnline ? (
+              <>
+                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-surface-400">NET:</span>
+                <span className="text-emerald-400 font-bold">ONLINE</span>
+                {stats.networkStatus?.latencyMs !== undefined && stats.networkStatus?.latencyMs !== null && (
+                  <span className="text-surface-500 text-[10px]">({stats.networkStatus.latencyMs}ms)</span>
+                )}
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3.5 h-3.5 text-rose-400" />
+                <span className="text-rose-400 font-bold tracking-wide">NO INTERNET</span>
+              </>
+            )}
+          </div>
+
           <div className="px-2.5 py-1 rounded-lg bg-surface-850 flex items-center gap-1.5">
             <span className="text-surface-400">Tasks:</span>
             <span className="text-emerald-400 font-bold">{stats.activeTasks}</span>

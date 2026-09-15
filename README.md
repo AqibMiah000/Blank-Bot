@@ -39,6 +39,7 @@
 | :--- | :--- | :---: |
 | **24/7 TCG Drop Radar & Sentinel** | Real-time 24/7 inventory scanner tracking Pokémon (*Chaos Rising*, *Destined Rivals*, *Journey Together*, *Prismatic Evolutions*, *151*) and One Piece (*OP-10*) across Best Buy, Target, Walmart, and Amazon. | ⚡ v1.30 |
 | **Target & Walmart Local Shelf Radar** | Scans Target and Walmart branches within 10–50 mi by City, State & ZIP with exact street addresses and 100% verified live inventory (zero simulated fallbacks). | ⚡ v1.30 |
+| **Live WAN Network Sentinel** | Actively verifies real internet access via Cloudflare/Google DNS & HTTP 204 heartbeats. Automatically suppresses phantom alerts and protects checkouts while offline. | ⚡ v1.30 |
 | **Rich Discord Restock Webhooks** | Dispatches instant drop notifications with product art, retail MSRP vs. market spread, local branch mileage, and 1-click Auto-Snipe. | ⚡ v1.30 |
 | **Multi-Task Mass Edit Modal** | Batch-update profiles, proxy pools, mode (FAST/STEALTH), delays, and scheduled drop times across dozens of tasks at once. | ⚡ v1.30 |
 | **Inline Quick-Task Launcher** | Paste any retailer product link or SKU directly into the Tasks header for instant single-task execution. | ⚡ v1.30 |

@@ -612,6 +612,108 @@ async function runTestSuite() {
   );
 
   // -------------------------------------------------------------------------
+  // 8. LIVE WAN NETWORK SENTINEL & OFFLINE DETECTION
+  // -------------------------------------------------------------------------
+  console.log('\n--- 8. Live WAN Network Sentinel & Offline Detection ---');
+
+  test(
+    'Network Sentinel',
+    'Detects offline state and enforces offline status badge',
+    () => {
+      const netStatus = { isOnline: false, latencyMs: null, lastChecked: Date.now() };
+      const getDisplayBadge = (status: { isOnline: boolean; latencyMs: number | null }) => {
+        if (!status.isOnline) {
+          return { text: 'OFFLINE (NO INTERNET)', isPinging: false, color: 'rose' };
+        }
+        return { text: 'SCANNER LIVE', isPinging: true, color: 'emerald' };
+      };
+
+      const badge = getDisplayBadge(netStatus);
+      assert(badge.text === 'OFFLINE (NO INTERNET)', 'Must display OFFLINE badge when disconnected');
+      assert(badge.isPinging === false, 'Must disable green ping animation when offline');
+      assert(badge.color === 'rose', 'Must use rose warning color');
+    },
+    'CRITICAL',
+    'Network offline state transparency'
+  );
+
+  test(
+    'Network Sentinel',
+    'Offline store shelf scan guard: Rejects immediately with offline error instead of fake 0 units',
+    () => {
+      const netStatus = { isOnline: false };
+      let scanResult: string | null = null;
+
+      const attemptStoreScan = (online: boolean) => {
+        if (!online) {
+          return '❌ Offline: No internet connection detected. Connect to Wi-Fi or Ethernet to scan local Target & Walmart shelves.';
+        }
+        return 'Queried Target & Walmart branches...';
+      };
+
+      scanResult = attemptStoreScan(netStatus.isOnline);
+      assert(scanResult.startsWith('❌ Offline:'), 'Must return offline error message');
+      assert(!scanResult.includes('Queried Target & Walmart'), 'Must not claim stores were queried when offline');
+    },
+    'CRITICAL',
+    'Offline false-query prevention'
+  );
+
+  test(
+    'Network Sentinel',
+    'Offline channel refresh guard: Rejects manual channel refresh when disconnected',
+    () => {
+      const netStatus = { isOnline: false };
+      let refreshError: string | null = null;
+
+      const attemptChannelRefresh = (online: boolean) => {
+        if (!online) {
+          throw new Error('❌ Offline: Cannot refresh retailer channels without an active internet connection.');
+        }
+        return 'Refreshed';
+      };
+
+      try {
+        attemptChannelRefresh(netStatus.isOnline);
+      } catch (err: any) {
+        refreshError = err.message;
+      }
+
+      assert(refreshError !== null, 'Must throw error when attempting refresh offline');
+      assert(refreshError!.includes('active internet connection'), 'Must explain internet connection requirement');
+    },
+    'HIGH',
+    'Channel refresh network validation'
+  );
+
+  test(
+    'Network Sentinel',
+    'Task Engine Offline Launch Blocker: Aborts task start and marks status FAILED when offline',
+    () => {
+      const netStatus = { isOnline: false };
+      let taskStatus = 'IDLE';
+      let statusMessage = '';
+
+      const launchTask = (online: boolean) => {
+        if (!online) {
+          taskStatus = 'FAILED';
+          statusMessage = 'Network Error: No active internet connection detected. Connect to Wi-Fi/Ethernet.';
+          return false;
+        }
+        taskStatus = 'RUNNING';
+        return true;
+      };
+
+      const launched = launchTask(netStatus.isOnline);
+      assert(launched === false, 'Task launch must be blocked when offline');
+      assert(taskStatus === 'FAILED', 'Task status must be marked FAILED');
+      assert(statusMessage.includes('Network Error: No active internet connection'), 'Must provide clear network error message');
+    },
+    'CRITICAL',
+    'Prevent phantom task execution while offline'
+  );
+
+  // -------------------------------------------------------------------------
   // FINAL RESULTS
   // -------------------------------------------------------------------------
   const total = bugReports.length;

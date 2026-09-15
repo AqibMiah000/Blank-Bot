@@ -308,6 +308,13 @@ export interface AppSettings {
   shapeHarvestInterval: number; // seconds
 }
 
+export interface NetworkStatus {
+  isOnline: boolean;
+  latencyMs: number | null;
+  lastChecked: number;
+  error?: string | null;
+}
+
 export interface SystemStats {
   activeTasks: number;
   totalTasks: number;
@@ -315,4 +322,5 @@ export interface SystemStats {
   failedCount: number;
   imapStatus: 'connected' | 'disconnected' | 'connecting';
   activeProxies: number;
+  networkStatus?: NetworkStatus;
 }

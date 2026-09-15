@@ -11,10 +11,16 @@ import {
   FreebiesConfig,
   TcgRestockEvent,
   TcgMonitorConfig,
-  AppSettings
+  AppSettings,
+  NetworkStatus
 } from './index';
 
 export interface BlankBotAPI {
+  // Live WAN Internet Connectivity Sentinel
+  checkInternet: () => Promise<NetworkStatus>;
+  getInternetStatus: () => Promise<NetworkStatus>;
+  onNetworkStatus: (callback: (status: NetworkStatus) => void) => () => void;
+
   // Local Cryptography
   encrypt: (text: string, passphrase?: string) => Promise<string>;
   decrypt: (payload: string, passphrase?: string) => Promise<string>;

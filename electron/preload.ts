@@ -14,6 +14,15 @@ import {
 } from '../src/types';
 
 contextBridge.exposeInMainWorld('blankBotAPI', {
+  // Live WAN Internet Connectivity Sentinel
+  checkInternet: () => ipcRenderer.invoke('network:check'),
+  getInternetStatus: () => ipcRenderer.invoke('network:get-status'),
+  onNetworkStatus: (callback: (status: any) => void) => {
+    const handler = (_: any, status: any) => callback(status);
+    ipcRenderer.on('network:status', handler);
+    return () => ipcRenderer.removeListener('network:status', handler);
+  },
+
   // Local Cryptography (AES-256-GCM)
   encrypt: (text: string, passphrase?: string) =>
     ipcRenderer.invoke('crypto:encrypt', text, passphrase),

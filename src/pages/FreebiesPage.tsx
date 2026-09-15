@@ -21,13 +21,14 @@ import {
   Search,
   Sparkles,
 } from 'lucide-react';
-import { AmazonFreebieItem, FreebiesConfig, BillingProfile, ProxyPool } from '../types';
+import { AmazonFreebieItem, FreebiesConfig, BillingProfile, ProxyPool, NetworkStatus } from '../types';
 import { playFreebieSniperChime } from '../utils/audio';
 
 interface FreebiesPageProps {
   profiles: BillingProfile[];
   proxyPools: ProxyPool[];
   onCreateQuickTask?: (item: AmazonFreebieItem) => void;
+  networkStatus?: NetworkStatus;
 }
 
 // 100% verified, genuine live Amazon US items with active buy boxes & confirmed non-404 ASINs
@@ -170,7 +171,9 @@ export const FreebiesPage: React.FC<FreebiesPageProps> = ({
   profiles,
   proxyPools,
   onCreateQuickTask,
+  networkStatus,
 }) => {
+  const isOnline = networkStatus ? networkStatus.isOnline !== false : (typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRunning, setIsRunning] = useState(true);
   const [isStreamPaused, setIsStreamPaused] = useState(false);
   const [sniperChimeEnabled, setSniperChimeEnabled] = useState(true);
@@ -213,6 +216,10 @@ export const FreebiesPage: React.FC<FreebiesPageProps> = ({
 
   // Function to pull real, live Amazon US deals from Electron backend
   const fetchLiveDealsFromSource = async () => {
+    if (!isOnline) {
+      setIsRefreshing(false);
+      return;
+    }
     setIsRefreshing(true);
     try {
       if (window.blankBotAPI?.fetchLiveAmazonDeals) {
@@ -498,10 +505,17 @@ export const FreebiesPage: React.FC<FreebiesPageProps> = ({
         <div className="flex items-center space-x-5 text-surface-300 flex-wrap gap-y-1">
           <div className="flex items-center space-x-1.5">
             <span className="text-surface-400">Status:</span>
-            <span className="text-emerald-400 font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-              Live Stream
-            </span>
+            {isOnline ? (
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                Live Stream
+              </span>
+            ) : (
+              <span className="text-rose-400 font-bold flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                Offline (No Internet)
+              </span>
+            )}
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="text-surface-400">Total Deals:</span>

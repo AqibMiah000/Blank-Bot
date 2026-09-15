@@ -26,7 +26,9 @@ import {
   SystemStats,
   Retailer,
   CheckoutRecord,
+  NetworkStatus,
 } from './types';
+import { WifiOff } from 'lucide-react';
 import { applyTheme } from './utils/theme';
 
 export const App: React.FC = () => {
@@ -55,6 +57,53 @@ export const App: React.FC = () => {
   const [imapStatus, setImapStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
 
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('oled');
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    latencyMs: null,
+    lastChecked: Date.now(),
+  });
+
+  // Track real WAN internet connectivity
+  useEffect(() => {
+    const handleOnline = () => {
+      if (window.blankBotAPI?.checkInternet) {
+        window.blankBotAPI.checkInternet().then(setNetworkStatus);
+      } else {
+        setNetworkStatus({ isOnline: true, latencyMs: 15, lastChecked: Date.now() });
+      }
+    };
+    const handleOffline = () => {
+      setNetworkStatus({ isOnline: false, latencyMs: null, lastChecked: Date.now(), error: 'Network interface disconnected' });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    let unsubNet: (() => void) | undefined;
+    if (window.blankBotAPI) {
+      window.blankBotAPI.getInternetStatus().then(setNetworkStatus);
+      unsubNet = window.blankBotAPI.onNetworkStatus(setNetworkStatus);
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      if (unsubNet) unsubNet();
+    };
+  }, []);
+
+  const handleCheckConnection = async () => {
+    if (window.blankBotAPI?.checkInternet) {
+      const res = await window.blankBotAPI.checkInternet();
+      setNetworkStatus(res);
+    } else {
+      setNetworkStatus({
+        isOnline: navigator.onLine,
+        latencyMs: navigator.onLine ? 15 : null,
+        lastChecked: Date.now(),
+      });
+    }
+  };
 
   // Load initial data
   useEffect(() => {
@@ -550,6 +599,7 @@ export const App: React.FC = () => {
     failedCount: tasks.filter((t) => t.status === 'FAILED').length,
     imapStatus,
     activeProxies: totalProxies,
+    networkStatus,
   };
 
   const handleQuickSnipeTcg = async (item: {
@@ -617,6 +667,24 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {networkStatus.isOnline === false && (
+          <div className="bg-rose-950/95 border-b border-rose-500/50 text-rose-200 px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-lg backdrop-blur-md z-50">
+            <div className="flex items-center gap-2">
+              <WifiOff className="w-4 h-4 text-rose-400 animate-pulse shrink-0" />
+              <span>
+                <strong className="text-rose-100 uppercase tracking-wide mr-1">No Internet Connection:</strong>
+                Live TCG drop detection, local store shelf scanning, and task checkout engines are offline until internet connectivity is restored.
+              </span>
+            </div>
+            <button
+              onClick={handleCheckConnection}
+              className="ml-3 px-2.5 py-1 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded text-[11px] font-mono font-bold transition-all shrink-0"
+            >
+              Retry Connection
+            </button>
+          </div>
+        )}
+
         <Header
           title={currentPage}
           stats={systemStats}
@@ -661,6 +729,7 @@ export const App: React.FC = () => {
               profiles={profiles}
               proxyPools={proxyPools}
               defaultWebhookUrl={settings.discordWebhookUrl}
+              networkStatus={networkStatus}
             />
           )}
 
@@ -693,6 +762,7 @@ export const App: React.FC = () => {
               profiles={profiles}
               proxyPools={proxyPools}
               onCreateQuickTask={handleCreateQuickTask}
+              networkStatus={networkStatus}
             />
           )}
 

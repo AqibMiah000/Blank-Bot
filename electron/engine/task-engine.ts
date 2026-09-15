@@ -16,6 +16,7 @@ import { AmazonWorker } from '../modules/amazon';
 import { AppleWorker } from '../modules/apple';
 import { sendDiscordCheckoutWebhook } from '../services/discord';
 import { audioService } from '../services/audio';
+import { networkSentinel } from '../services/network-sentinel';
 
 export interface TaskEngineEvents {
   task_update: (data: {
@@ -53,6 +54,21 @@ export class TaskEngine extends EventEmitter {
   ): boolean {
     if (this.activeWorkers.has(task.id)) {
       this.stopTask(task.id);
+    }
+
+    const netStatus = networkSentinel.getStatus();
+    if (!netStatus.isOnline) {
+      this.emit('task_update', {
+        taskId: task.id,
+        status: 'FAILED',
+        message: 'Network Error: No internet connection. Check Wi-Fi/Ethernet.',
+        log: {
+          timestamp: Date.now(),
+          level: 'error',
+          message: '[FAILED] Cannot start task: Host system is offline.',
+        },
+      });
+      return false;
     }
 
     // Check epoch schedule if specified

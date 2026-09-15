@@ -20,6 +20,7 @@ import {
   Navigation,
   Volume2,
   VolumeX,
+  WifiOff,
 } from 'lucide-react';
 import {
   TcgRestockEvent,
@@ -27,6 +28,7 @@ import {
   Retailer,
   BillingProfile,
   ProxyPool,
+  NetworkStatus,
 } from '../types';
 import { playRefractCyanChime, playCashRegister } from '../utils/audio';
 
@@ -40,6 +42,7 @@ interface TcgRadarPageProps {
   profiles: BillingProfile[];
   proxyPools: ProxyPool[];
   defaultWebhookUrl?: string;
+  networkStatus?: NetworkStatus;
 }
 
 const US_STATES = [
@@ -189,7 +192,9 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   profiles,
   proxyPools,
   defaultWebhookUrl = '',
+  networkStatus,
 }) => {
+  const isOnline = networkStatus ? networkStatus.isOnline !== false : (typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRunning, setIsRunning] = useState(false);
   const [pollInterval, setPollInterval] = useState(15); // seconds
   const [webhookUrl, setWebhookUrl] = useState(defaultWebhookUrl);
@@ -330,6 +335,12 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       }
       setIsRunning(false);
     } else {
+      if (!isOnline) {
+        setRefreshMessage('❌ Offline: Cannot start Sentinel scanner without an active internet connection.');
+        setTimeout(() => setRefreshMessage(null), 5000);
+        return;
+      }
+
       const config: TcgMonitorConfig = {
         enabled: true,
         pollIntervalMs: pollInterval * 1000,
@@ -355,6 +366,12 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   };
 
   const handleTestWebhook = async () => {
+    if (!isOnline) {
+      setWebhookTestStatus('❌ Offline: Cannot dispatch Discord webhook without an active internet connection.');
+      setTimeout(() => setWebhookTestStatus(null), 5000);
+      return;
+    }
+
     if (!webhookUrl.trim()) {
       setWebhookTestStatus('Enter a valid Discord Webhook URL first.');
       setTimeout(() => setWebhookTestStatus(null), 4000);
@@ -386,9 +403,25 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   };
 
   const handleScanLocalStores = async () => {
+    if (!isOnline) {
+      setLocalScanMessage('❌ Offline: No internet connection detected. Please connect to Wi-Fi or Ethernet to scan local Target & Walmart shelves.');
+      setTimeout(() => setLocalScanMessage(null), 6000);
+      return;
+    }
+
     setIsScanningLocal(true);
     setLocalScanMessage(null);
     try {
+      if (window.blankBotAPI?.checkInternet) {
+        const net = await window.blankBotAPI.checkInternet();
+        if (!net.isOnline) {
+          setLocalScanMessage('❌ Offline: No internet connection detected. Please connect to Wi-Fi or Ethernet to query Target & Walmart store shelves.');
+          setIsScanningLocal(false);
+          setTimeout(() => setLocalScanMessage(null), 6000);
+          return;
+        }
+      }
+
       let results: TcgRestockEvent[] = [];
       if (window.blankBotAPI?.triggerTcgLocalStoreScan) {
         results = await window.blankBotAPI.triggerTcgLocalStoreScan(
@@ -420,7 +453,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         );
       }
     } catch (err: any) {
-      setLocalScanMessage(`Scan check error: ${err.message}`);
+      setLocalScanMessage(`❌ Scan error: ${err.message || 'Unable to connect to retailer store servers'}`);
     } finally {
       setIsScanningLocal(false);
       setTimeout(() => setLocalScanMessage(null), 6000);
@@ -428,9 +461,25 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   };
 
   const handleManualRefreshAll = async () => {
+    if (!isOnline) {
+      setRefreshMessage('❌ Offline: Cannot refresh retailer channels without an active internet connection.');
+      setTimeout(() => setRefreshMessage(null), 5000);
+      return;
+    }
+
     setIsRefreshingAll(true);
     setRefreshMessage(null);
     try {
+      if (window.blankBotAPI?.checkInternet) {
+        const net = await window.blankBotAPI.checkInternet();
+        if (!net.isOnline) {
+          setRefreshMessage('❌ Offline: Lost internet connection. Cannot reach Best Buy, Target, Walmart, or Amazon.');
+          setIsRefreshingAll(false);
+          setTimeout(() => setRefreshMessage(null), 5000);
+          return;
+        }
+      }
+
       let results: TcgRestockEvent[] = [];
       if (window.blankBotAPI?.triggerTcgManualScan) {
         results = await window.blankBotAPI.triggerTcgManualScan({
@@ -460,10 +509,10 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       }
       setRefreshMessage(`✓ Channels refreshed. Current inventory state verified across Best Buy, Target, Walmart & Amazon.`);
     } catch (err: any) {
-      setRefreshMessage(`Refresh error: ${err.message}`);
+      setRefreshMessage(`❌ Refresh error: ${err.message}`);
     } finally {
       setIsRefreshingAll(false);
-      setTimeout(() => setRefreshMessage(null), 4000);
+      setTimeout(() => setRefreshMessage(null), 5000);
     }
   };
 
@@ -503,20 +552,28 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         </div>
 
         <div className="flex items-center space-x-3">
-          <div
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold ${
-              isRunning
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-surface-800/80 border-surface-700 text-surface-400'
-            }`}
-          >
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                isRunning ? 'bg-emerald-400 animate-ping' : 'bg-surface-600'
+          {/* Scanner & Network Status Badge */}
+          {!isOnline ? (
+            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold bg-rose-500/10 border-rose-500/40 text-rose-400 animate-pulse">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              <span>OFFLINE (NO INTERNET)</span>
+            </div>
+          ) : (
+            <div
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold ${
+                isRunning
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  : 'bg-surface-800/80 border-surface-700 text-surface-400'
               }`}
-            />
-            <span>{isRunning ? 'SCANNER LIVE' : 'SENTINEL PAUSED'}</span>
-          </div>
+            >
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  isRunning ? 'bg-emerald-400 animate-ping' : 'bg-surface-600'
+                }`}
+              />
+              <span>{isRunning ? 'SCANNER LIVE' : 'SENTINEL PAUSED'}</span>
+            </div>
+          )}
 
           {/* Overall Physical Refresh Button */}
           <button
@@ -834,7 +891,13 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                 </button>
 
                 {localScanMessage && (
-                  <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-[11px] text-emerald-300 font-mono">
+                  <div
+                    className={`p-2.5 rounded-xl border text-[11px] font-mono ${
+                      localScanMessage.startsWith('❌')
+                        ? 'bg-rose-950/80 border-rose-500/50 text-rose-300'
+                        : 'bg-emerald-950/60 border-emerald-500/30 text-emerald-300'
+                    }`}
+                  >
                     {localScanMessage}
                   </div>
                 )}
@@ -880,6 +943,25 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Manual Refresh Feedback Banner */}
+          {refreshMessage && (
+            <div
+              className={`mb-3 p-2.5 rounded-xl border text-xs font-mono flex items-center justify-between shadow-sm ${
+                refreshMessage.startsWith('❌')
+                  ? 'bg-rose-950/90 border-rose-500/60 text-rose-200'
+                  : 'bg-surface-900 border-brand-500/40 text-brand-300'
+              }`}
+            >
+              <span>{refreshMessage}</span>
+              <button
+                onClick={() => setRefreshMessage(null)}
+                className="text-surface-400 hover:text-white ml-2 text-sm leading-none cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* Event Cards Scroll */}
           <div className="flex-1 overflow-y-auto space-y-3 pr-1">

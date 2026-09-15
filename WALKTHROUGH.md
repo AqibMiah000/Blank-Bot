@@ -429,6 +429,11 @@ Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving y
    - Located in the top header bar and above the event feed.
    - Press **"Refresh All Channels"** at any time to execute an immediate, on-demand inventory check across Best Buy, Target, Walmart, and Amazon.
 
+8. **Live WAN Network Sentinel & Offline Safeguards**:
+   - Blank actively verifies genuine internet connectivity via Cloudflare/Google DNS resolution and HTTP 204 heartbeats every 4 seconds.
+   - Real-time **NET: ONLINE (N ms)** / **NO INTERNET** indicator rendered in the global header bar and radar sentinel.
+   - **Offline Safeguards**: If internet access is lost, Blank immediately halts background polling, disables simulated latency, displays a top warning banner with a **"Retry Connection"** button, and prevents tasks and shelf scans from failing silently or fabricating false inventory results.
+
 ---
 
 ## 17. Multi-Task Mass Edit & Quick-Task Drop Launcher

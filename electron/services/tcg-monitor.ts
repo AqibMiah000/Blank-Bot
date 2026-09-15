@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { gotScraping } from 'got-scraping';
+import { networkSentinel } from './network-sentinel';
 import { TcgMonitorConfig, TcgRestockEvent, Retailer } from '../../src/types';
 
 interface TrackedTcgTarget {
@@ -172,6 +173,12 @@ export class TcgDropMonitor extends EventEmitter {
         ...customConfig,
       };
     }
+
+    const netStatus = await networkSentinel.checkConnectivity();
+    if (!netStatus.isOnline) {
+      throw new Error('No internet connection detected. Please connect to the internet to refresh channels.');
+    }
+
     const detected: TcgRestockEvent[] = [];
     const targets = Array.from(this.targets.values());
 
@@ -250,6 +257,11 @@ export class TcgDropMonitor extends EventEmitter {
     city?: string,
     state?: string
   ): Promise<TcgRestockEvent[]> {
+    const netStatus = await networkSentinel.checkConnectivity();
+    if (!netStatus.isOnline) {
+      throw new Error('No internet connection detected. Please connect to Wi-Fi or Ethernet to scan local stores.');
+    }
+
     const detected: TcgRestockEvent[] = [];
     const localTargets = Array.from(this.targets.values()).filter(
       (t) => t.retailer === 'target' || t.retailer === 'walmart'
@@ -290,6 +302,15 @@ export class TcgDropMonitor extends EventEmitter {
 
   private async pollLoop(): Promise<void> {
     if (!this.isRunning || !this.config) return;
+
+    const netStatus = networkSentinel.getStatus();
+    if (!netStatus.isOnline) {
+      console.log('[TCG Monitor] Network offline. Pausing scan loop until connection is restored...');
+      if (this.isRunning) {
+        this.timer = setTimeout(() => this.pollLoop(), 5000);
+      }
+      return;
+    }
 
     try {
       await this.scanAllTargets();

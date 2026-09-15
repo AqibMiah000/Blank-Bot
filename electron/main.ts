@@ -14,6 +14,7 @@ import { audioService } from './services/audio';
 import { exportBackupToFile, importBackupFromFile } from './services/storage';
 import { freebiesSniper, fetchLiveAmazonDeals } from './modules/amazon';
 import { tcgDropMonitor, sendTcgRestockWebhook } from './services/tcg-monitor';
+import { networkSentinel } from './services/network-sentinel';
 import { TaskItem, BillingProfile, ProxyPool, RetailAccount, FreebiesConfig, TcgMonitorConfig, TcgRestockEvent, ProxyItem } from '../src/types';
 
 // Remove default File/Edit/View menu bar for clean, minimal UI
@@ -110,6 +111,12 @@ function createWindow(): void {
     }
   });
 
+  networkSentinel.on('status', (status) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('network:status', status);
+    }
+  });
+
   const indexPath = path.join(app.getAppPath(), 'dist/index.html');
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL).catch(() => {
@@ -129,6 +136,15 @@ function createWindow(): void {
 }
 
 function registerIpcHandlers(): void {
+  // Live WAN Internet Connectivity Sentinel
+  ipcMain.handle('network:check', async () => {
+    return networkSentinel.checkConnectivity();
+  });
+
+  ipcMain.handle('network:get-status', async () => {
+    return networkSentinel.getStatus();
+  });
+
   // Cryptography
   ipcMain.handle('crypto:encrypt', async (_, text: string, passphrase?: string) => {
     return encryptData(text, passphrase);
@@ -492,6 +508,7 @@ function registerIpcHandlers(): void {
 // Electron App Lifecycle
 app.whenReady().then(() => {
   registerIpcHandlers();
+  networkSentinel.startMonitoring(4000);
   createWindow();
 
   app.on('activate', () => {
