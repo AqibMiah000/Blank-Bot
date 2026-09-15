@@ -476,6 +476,9 @@ export const CaptchasPage: React.FC<CaptchasPageProps> = ({ solverKeys, onSaveKe
                   >
                     {slot.target}
                   </span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-950 text-brand-300 border border-surface-800">
+                    {slot.tokensHarvested} tokens ready
+                  </span>
                 </div>
 
                 <div className="flex items-center space-x-1.5">

@@ -13,6 +13,9 @@ import {
   Copy,
   Layers,
   FileSpreadsheet,
+  Sliders,
+  Send,
+  ZapOff,
 } from 'lucide-react';
 import {
   TaskItem,
@@ -25,6 +28,7 @@ import {
 import { TaskModal } from '../components/TaskModal';
 import { LogStreamModal } from '../components/LogStreamModal';
 import { MassTaskModal } from '../components/MassTaskModal';
+import { MassEditModal, MassEditUpdates } from '../components/MassEditModal';
 
 interface TasksPageProps {
   tasks: TaskItem[];
@@ -60,6 +64,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({
   const [selectedGroupId, setSelectedGroupId] = useState<string>(taskGroups[0]?.id || 'default');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isMassModalOpen, setIsMassModalOpen] = useState(false);
+  const [isMassEditOpen, setIsMassEditOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'running' | 'idle' | 'success' | 'failed'>('all');
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [activeLogTask, setActiveLogTask] = useState<TaskItem | null>(null);
@@ -68,9 +73,109 @@ export const TasksPage: React.FC<TasksPageProps> = ({
   const [newGroupRetailer, setNewGroupRetailer] = useState<Retailer>('bestbuy');
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
 
+  // Quick Task State
+  const [quickTaskInput, setQuickTaskInput] = useState('');
+  const [quickTaskAutoStart, setQuickTaskAutoStart] = useState(true);
+  const [quickTaskDryRun, setQuickTaskDryRun] = useState(false);
+
   const currentGroupTasks = tasks.filter(
     (t) => t.groupId === selectedGroupId || (selectedGroupId === 'all')
   );
+
+  const detectRetailerFromInput = (raw: string): { retailer: Retailer; cleanInput: string } => {
+    const trimmed = raw.trim();
+    if (/amazon\.com/i.test(trimmed) || /^(B[0-9A-Z]{9})$/i.test(trimmed)) {
+      const asinMatch = trimmed.match(/\/dp\/([A-Z0-9]{10})/i) || trimmed.match(/([A-Z0-9]{10})/i);
+      return { retailer: 'amazon', cleanInput: asinMatch ? asinMatch[1] : trimmed };
+    }
+    if (/bestbuy\.com/i.test(trimmed) || /^\d{7}$/.test(trimmed)) {
+      const skuMatch = trimmed.match(/skuId=([0-9]+)/i) || trimmed.match(/\/([0-9]{7})\.p/i);
+      return { retailer: 'bestbuy', cleanInput: skuMatch ? skuMatch[1] : trimmed };
+    }
+    if (/walmart\.com/i.test(trimmed)) {
+      const itemMatch = trimmed.match(/\/ip\/[^/]+\/([0-9]+)/i) || trimmed.match(/\/([0-9]{8,10})/);
+      return { retailer: 'walmart', cleanInput: itemMatch ? itemMatch[1] : trimmed };
+    }
+    if (/target\.com/i.test(trimmed)) {
+      const tcinMatch = trimmed.match(/A-([0-9]+)/i) || trimmed.match(/\/([0-9]{8})/);
+      return { retailer: 'target', cleanInput: tcinMatch ? tcinMatch[1] : trimmed };
+    }
+    if (/apple\.com/i.test(trimmed)) {
+      const partMatch = trimmed.match(/\/product\/([A-Z0-9/]+)/i);
+      return { retailer: 'apple', cleanInput: partMatch ? partMatch[1] : trimmed };
+    }
+    // Fallback to currently selected group's retailer
+    const fallbackRetailer = taskGroups.find((g) => g.id === selectedGroupId)?.retailer || 'bestbuy';
+    return { retailer: fallbackRetailer, cleanInput: trimmed };
+  };
+
+  const handleQuickTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickTaskInput.trim()) return;
+
+    const { retailer: detectedRetailer, cleanInput } = detectRetailerFromInput(quickTaskInput);
+    const targetGroupId = selectedGroupId === 'all' ? (taskGroups[0]?.id || 'default') : selectedGroupId;
+
+    const newTask: Partial<TaskItem> = {
+      groupId: targetGroupId,
+      retailer: detectedRetailer,
+      input: cleanInput,
+      profileId: profiles[0]?.id || '',
+      proxyPoolId: proxyPools[0]?.id || undefined,
+      monitorDelay: 3500,
+      retryDelay: 2000,
+      status: 'IDLE',
+      statusMessage: 'Ready (Quick-Task)',
+      flags: {
+        skipMonitor: false,
+        loopCheckout: false,
+        autoStartOnRestart: false,
+        dryRun: quickTaskDryRun,
+      },
+      logs: [
+        {
+          timestamp: Date.now(),
+          level: 'info',
+          message: `Quick-Task generated for ${detectedRetailer.toUpperCase()} (${cleanInput})${quickTaskDryRun ? ' [DRY-RUN]' : ''}`,
+        },
+      ],
+    };
+
+    setQuickTaskInput('');
+    await onSaveTask(newTask);
+
+    if (quickTaskAutoStart) {
+      // Find created task ID or trigger via next render
+      setTimeout(() => {
+        const latest = tasks.find((t) => t.input === cleanInput);
+        if (latest) onStartTask(latest.id);
+      }, 300);
+    }
+  };
+
+  const handleApplyMassEdit = async (updates: MassEditUpdates) => {
+    for (const id of selectedTaskIds) {
+      const existing = tasks.find((t) => t.id === id);
+      if (!existing) continue;
+
+      const merged: Partial<TaskItem> = {
+        id,
+        groupId: existing.groupId,
+        retailer: updates.retailer || existing.retailer,
+        input: existing.input,
+        monitorDelay: updates.monitorDelay ?? existing.monitorDelay,
+        retryDelay: updates.retryDelay ?? existing.retryDelay,
+        profileId: updates.profileId || existing.profileId,
+        proxyPoolId: updates.proxyPoolId !== undefined ? updates.proxyPoolId : existing.proxyPoolId,
+        flags: {
+          ...existing.flags,
+          ...(updates.flags || {}),
+        },
+      };
+
+      await onSaveTask(merged);
+    }
+  };
 
   const filteredTasks = currentGroupTasks.filter((t) => {
     if (statusFilter === 'all') return true;
@@ -305,6 +410,14 @@ export const TasksPage: React.FC<TasksPageProps> = ({
                   <span>Stop</span>
                 </button>
                 <button
+                  onClick={() => setIsMassEditOpen(true)}
+                  className="px-2.5 py-1 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 rounded-lg text-xs font-semibold flex items-center gap-1"
+                  title="Mass Edit Selected Tasks"
+                >
+                  <Sliders className="w-3 h-3" />
+                  <span>Mass Edit ({selectedTaskIds.length})</span>
+                </button>
+                <button
                   onClick={async () => {
                     for (const id of selectedTaskIds) {
                       await onDeleteTask(id);
@@ -364,6 +477,58 @@ export const TasksPage: React.FC<TasksPageProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Quick-Task Drop Launcher Bar */}
+        <form
+          onSubmit={handleQuickTaskSubmit}
+          className="p-2.5 px-6 bg-surface-950 border-b border-surface-800/80 flex items-center gap-3"
+        >
+          <div className="flex items-center gap-2 text-brand-400 font-bold text-xs shrink-0">
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <span className="hidden md:inline">Quick Task:</span>
+          </div>
+
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={quickTaskInput}
+              onChange={(e) => setQuickTaskInput(e.target.value)}
+              placeholder="Paste Best Buy / Amazon / Walmart / Target / Apple product URL or SKU & hit Enter..."
+              className="w-full bg-surface-900/90 border border-surface-700/80 focus:border-brand-500 rounded-xl px-3.5 py-1.5 text-xs text-white placeholder:text-surface-500 font-mono outline-none transition-all"
+            />
+          </div>
+
+          <div className="flex items-center space-x-3 shrink-0">
+            <label className="flex items-center space-x-1.5 text-[11px] text-surface-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={quickTaskAutoStart}
+                onChange={(e) => setQuickTaskAutoStart(e.target.checked)}
+                className="w-3.5 h-3.5 rounded text-brand-500 bg-surface-900 border-surface-700"
+              />
+              <span className="hidden sm:inline">Auto-Start</span>
+            </label>
+
+            <label className="flex items-center space-x-1.5 text-[11px] text-amber-400/90 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={quickTaskDryRun}
+                onChange={(e) => setQuickTaskDryRun(e.target.checked)}
+                className="w-3.5 h-3.5 rounded text-amber-500 bg-surface-900 border-surface-700"
+              />
+              <span className="hidden sm:inline">Dry-Run</span>
+            </label>
+
+            <button
+              type="submit"
+              disabled={!quickTaskInput.trim()}
+              className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <Send className="w-3 h-3" />
+              <span>Launch</span>
+            </button>
+          </div>
+        </form>
 
         {/* High-Density Data Table */}
         <div className="flex-1 overflow-auto">
@@ -538,6 +703,16 @@ export const TasksPage: React.FC<TasksPageProps> = ({
         proxyPools={proxyPools}
         accounts={accounts}
         defaultGroupId={selectedGroupId === 'all' ? (taskGroups[0]?.id || 'default') : selectedGroupId}
+      />
+
+      {/* Mass Edit Selected Tasks Modal */}
+      <MassEditModal
+        isOpen={isMassEditOpen}
+        onClose={() => setIsMassEditOpen(false)}
+        onApply={handleApplyMassEdit}
+        selectedCount={selectedTaskIds.length}
+        profiles={profiles}
+        proxyPools={proxyPools}
       />
 
       {/* Task Console Log Modal */}
