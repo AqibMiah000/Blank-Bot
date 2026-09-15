@@ -349,8 +349,8 @@ function registerIpcHandlers(): void {
   });
 
   // 24/7 TCG Drop Radar & Restock Monitor
-  ipcMain.handle('tcg-monitor:start', async (_, config: TcgMonitorConfig) => {
-    return tcgDropMonitor.start(config);
+  ipcMain.handle('tcg-monitor:start', async (_, config: TcgMonitorConfig, proxyPool?: ProxyPool) => {
+    return tcgDropMonitor.start(config, proxyPool);
   });
 
   ipcMain.handle('tcg-monitor:stop', async () => {
@@ -365,14 +365,14 @@ function registerIpcHandlers(): void {
     return sendTcgRestockWebhook(url, event);
   });
 
-  ipcMain.handle('tcg-monitor:manual-scan', async (_, customConfig?: Partial<TcgMonitorConfig>) => {
-    return tcgDropMonitor.triggerManualScan(customConfig);
+  ipcMain.handle('tcg-monitor:manual-scan', async (_, customConfig?: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool) => {
+    return tcgDropMonitor.triggerManualScan(customConfig, proxyPool);
   });
 
   ipcMain.handle(
     'tcg-monitor:scan-local-stores',
-    async (_, zipCode: string, radiusMiles: number, city?: string, state?: string) => {
-      return tcgDropMonitor.triggerLocalStoreScan(zipCode, radiusMiles, city, state);
+    async (_, zipCode: string, radiusMiles: number, city?: string, state?: string, proxyPool?: ProxyPool) => {
+      return tcgDropMonitor.triggerLocalStoreScan(zipCode, radiusMiles, city, state, proxyPool);
     }
   );
 

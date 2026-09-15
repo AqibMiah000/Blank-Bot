@@ -10,6 +10,8 @@ import { parseProxyString } from '../electron/services/proxy-tester';
 import { imapWorker } from '../electron/services/imap-worker';
 import { parseAYCDJson, parseAYCDCsv } from '../src/utils/aycd-parser';
 import { SEED_MARKET_ITEMS } from '../src/utils/market-analytics';
+import { TcgDropMonitor } from '../electron/services/tcg-monitor';
+import { ProxyPool } from '../src/types';
 
 interface BugReport {
   suite: string;
@@ -718,6 +720,120 @@ async function runTestSuite() {
     },
     'CRITICAL',
     'Prevent phantom task execution while offline'
+  );
+
+  // -------------------------------------------------------------------------
+  // SUITE 9: Dedicated Monitor Proxy Binding & Rotation
+  // -------------------------------------------------------------------------
+  console.log('\n--- 9. Dedicated Monitor Proxy Binding & Rotation ---');
+
+  test(
+    'Monitor Proxy Binding',
+    'Direct WAN fallback when no proxy pool is bound (returns undefined)',
+    () => {
+      const monitor = new TcgDropMonitor();
+      monitor.setProxyPool(null);
+      const proxy1 = monitor.getNextProxyUrl();
+      const proxy2 = monitor.getNextProxyUrl();
+      assert(proxy1 === undefined, 'Must return undefined when no pool is bound');
+      assert(proxy2 === undefined, 'Must consistently return undefined for direct connection');
+    },
+    'CRITICAL',
+    'Zero configuration fallback to local network'
+  );
+
+  test(
+    'Monitor Proxy Binding',
+    'Round-robin proxy rotation across bound pool',
+    () => {
+      const monitor = new TcgDropMonitor();
+      const pool: ProxyPool = {
+        id: 'pool_test_1',
+        name: 'Residential ISP Pool',
+        tier: 'MONITOR_ISP',
+        createdAt: Date.now(),
+        proxies: [
+          parseProxyString('192.168.1.10:8080:userA:passA'),
+          parseProxyString('192.168.1.11:8080:userB:passB'),
+          parseProxyString('192.168.1.12:8080:userC:passC'),
+        ],
+      };
+
+      monitor.setProxyPool(pool);
+      assert(monitor.getProxyPool()?.id === 'pool_test_1', 'Proxy pool must be bound to monitor');
+
+      const u1 = monitor.getNextProxyUrl();
+      const u2 = monitor.getNextProxyUrl();
+      const u3 = monitor.getNextProxyUrl();
+      const u4 = monitor.getNextProxyUrl(); // Wraparound to 1st
+
+      assert(u1?.includes('userA:passA@192.168.1.10:8080'), '1st call routes through 1st proxy');
+      assert(u2?.includes('userB:passB@192.168.1.11:8080'), '2nd call routes through 2nd proxy');
+      assert(u3?.includes('userC:passC@192.168.1.12:8080'), '3rd call routes through 3rd proxy');
+      assert(u4 === u1, '4th call cleanly wraps around to beginning of pool');
+    },
+    'CRITICAL',
+    'Enforces rate-limit avoidance via even proxy distribution'
+  );
+
+  test(
+    'Monitor Proxy Binding',
+    'Dead proxy exclusion: Skips proxies marked dead in bound pool',
+    () => {
+      const monitor = new TcgDropMonitor();
+      const p1 = parseProxyString('10.0.0.1:8080');
+      const p2 = parseProxyString('10.0.0.2:8080');
+      const p3 = parseProxyString('10.0.0.3:8080');
+      p2.status = 'dead'; // Marked dead by health check
+
+      const pool: ProxyPool = {
+        id: 'pool_test_dead',
+        name: 'Mixed Health Pool',
+        tier: 'MONITOR_ISP',
+        createdAt: Date.now(),
+        proxies: [p1, p2, p3],
+      };
+
+      monitor.setProxyPool(pool);
+      const urls: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        const u = monitor.getNextProxyUrl();
+        if (u) urls.push(u);
+      }
+
+      assert(!urls.some((u) => u.includes('10.0.0.2')), 'Rotator must strictly omit dead proxies');
+      assert(urls.includes('http://10.0.0.1:8080'), 'Must cycle through active proxy 1');
+      assert(urls.includes('http://10.0.0.3:8080'), 'Must cycle through active proxy 3');
+    },
+    'HIGH',
+    'Prevents scrape timeouts from failed/banned proxies'
+  );
+
+  test(
+    'Monitor Proxy Binding',
+    'Supports SOCKS5 and HTTP authenticated proxies in monitor pool',
+    () => {
+      const monitor = new TcgDropMonitor();
+      const pHttp = parseProxyString('resi.proxynet.io:9000:alice:secret');
+      const pSocks = parseProxyString('socks5://proxy.socksnet.com:1080');
+
+      const pool: ProxyPool = {
+        id: 'pool_multi_proto',
+        name: 'Multi-Protocol Pool',
+        tier: 'CHECKOUT_RESI',
+        createdAt: Date.now(),
+        proxies: [pHttp, pSocks],
+      };
+
+      monitor.setProxyPool(pool);
+      const url1 = monitor.getNextProxyUrl();
+      const url2 = monitor.getNextProxyUrl();
+
+      assert(url1 === 'http://alice:secret@resi.proxynet.io:9000', 'Formats authenticated HTTP proxy URL correctly');
+      assert(url2 === 'socks5://proxy.socksnet.com:1080', 'Formats SOCKS5 proxy URL correctly');
+    },
+    'HIGH',
+    'Ensures compatibility with diverse proxy providers'
   );
 
   // -------------------------------------------------------------------------

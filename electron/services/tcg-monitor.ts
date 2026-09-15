@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
 import { gotScraping } from 'got-scraping';
 import { networkSentinel } from './network-sentinel';
-import { TcgMonitorConfig, TcgRestockEvent, Retailer } from '../../src/types';
+import { TcgMonitorConfig, TcgRestockEvent, Retailer, ProxyPool } from '../../src/types';
+import { formatProxyUrl } from './proxy-tester';
 
 interface TrackedTcgTarget {
   id: string;
@@ -122,6 +123,8 @@ export class TcgDropMonitor extends EventEmitter {
   private targets: Map<string, TrackedTcgTarget> = new Map();
   private lastRestockTimes: Map<string, number> = new Map();
   private lastStoreAlertTimes: Map<string, number> = new Map();
+  private proxyPool: ProxyPool | null = null;
+  private currentProxyIndex: number = 0;
 
   constructor() {
     super();
@@ -131,8 +134,33 @@ export class TcgDropMonitor extends EventEmitter {
     }
   }
 
-  public start(config: TcgMonitorConfig): boolean {
+  public setProxyPool(pool?: ProxyPool | null): void {
+    this.proxyPool = pool || null;
+    this.currentProxyIndex = 0;
+  }
+
+  public getProxyPool(): ProxyPool | null {
+    return this.proxyPool;
+  }
+
+  public getNextProxyUrl(): string | undefined {
+    if (!this.proxyPool || !this.proxyPool.proxies || this.proxyPool.proxies.length === 0) {
+      return undefined;
+    }
+    const nonDead = this.proxyPool.proxies.filter((p) => p.status !== 'dead');
+    const candidates = nonDead.length > 0 ? nonDead : this.proxyPool.proxies;
+    if (candidates.length === 0) return undefined;
+
+    const proxy = candidates[this.currentProxyIndex % candidates.length];
+    this.currentProxyIndex = (this.currentProxyIndex + 1) % candidates.length;
+    return formatProxyUrl(proxy);
+  }
+
+  public start(config: TcgMonitorConfig, proxyPool?: ProxyPool): boolean {
     this.config = config;
+    if (proxyPool !== undefined) {
+      this.setProxyPool(proxyPool);
+    }
     this.isRunning = true;
     this.emit('status', { isRunning: true, trackedCount: this.targets.size });
     this.pollLoop();
@@ -157,8 +185,12 @@ export class TcgDropMonitor extends EventEmitter {
   }
 
   public async triggerManualScan(
-    customConfig?: Partial<TcgMonitorConfig>
+    customConfig?: Partial<TcgMonitorConfig>,
+    proxyPool?: ProxyPool
   ): Promise<TcgRestockEvent[]> {
+    if (proxyPool !== undefined) {
+      this.setProxyPool(proxyPool);
+    }
     if (customConfig) {
       this.config = {
         ...(this.config || {
@@ -255,8 +287,12 @@ export class TcgDropMonitor extends EventEmitter {
     zipCode: string,
     radiusMiles: number,
     city?: string,
-    state?: string
+    state?: string,
+    proxyPool?: ProxyPool
   ): Promise<TcgRestockEvent[]> {
+    if (proxyPool !== undefined) {
+      this.setProxyPool(proxyPool);
+    }
     const netStatus = await networkSentinel.checkConnectivity();
     if (!netStatus.isOnline) {
       throw new Error('No internet connection detected. Please connect to Wi-Fi or Ethernet to scan local stores.');
@@ -448,9 +484,11 @@ export class TcgDropMonitor extends EventEmitter {
     switch (target.retailer) {
       case 'bestbuy': {
         try {
+          const proxyUrl = this.getNextProxyUrl();
           const res = await gotScraping.get(
             `https://www.bestbuy.com/api/3.0/priceBlocks?skus=${encodeURIComponent(target.identifier)}`,
             {
+              ...(proxyUrl ? { proxyUrl } : {}),
               headers: {
                 'Accept': 'application/json',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
@@ -469,9 +507,11 @@ export class TcgDropMonitor extends EventEmitter {
 
       case 'target': {
         try {
+          const proxyUrl = this.getNextProxyUrl();
           const res = await gotScraping.get(
             `https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin=${encodeURIComponent(target.identifier)}&pricing_store_id=3991`,
             {
+              ...(proxyUrl ? { proxyUrl } : {}),
               headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
               timeout: { request: 5000 },
               responseType: 'json',
@@ -487,9 +527,11 @@ export class TcgDropMonitor extends EventEmitter {
 
       case 'walmart': {
         try {
+          const proxyUrl = this.getNextProxyUrl();
           const res = await gotScraping.get(
             `https://www.walmart.com/ip/${encodeURIComponent(target.identifier)}`,
             {
+              ...(proxyUrl ? { proxyUrl } : {}),
               headers: {
                 'User-Agent':
                   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -500,9 +542,11 @@ export class TcgDropMonitor extends EventEmitter {
           );
           const body = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
           if (body.includes('PerimeterX') || res.statusCode === 412 || res.statusCode === 403) {
+            const fallbackProxyUrl = this.getNextProxyUrl();
             const apiRes = await gotScraping.get(
               `https://www.walmart.com/orchestra/suggester/api/v1/search?query=${encodeURIComponent(target.name)}`,
               {
+                ...(fallbackProxyUrl ? { proxyUrl: fallbackProxyUrl } : {}),
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
                 timeout: { request: 4000 },
                 responseType: 'json',
@@ -523,9 +567,11 @@ export class TcgDropMonitor extends EventEmitter {
 
       case 'amazon': {
         try {
+          const proxyUrl = this.getNextProxyUrl();
           const res = await gotScraping.get(
             `https://www.amazon.com/dp/${encodeURIComponent(target.identifier)}`,
             {
+              ...(proxyUrl ? { proxyUrl } : {}),
               headers: {
                 'User-Agent':
                   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -573,6 +619,7 @@ export class TcgDropMonitor extends EventEmitter {
       for (const store of stores) {
         if (target.retailer === 'target') {
           try {
+            const proxyUrl = this.getNextProxyUrl();
             const res = await gotScraping.get(
               `https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin=${encodeURIComponent(
                 target.identifier
@@ -580,6 +627,7 @@ export class TcgDropMonitor extends EventEmitter {
                 store.storeId
               )}`,
               {
+                ...(proxyUrl ? { proxyUrl } : {}),
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
                 timeout: { request: 5000 },
                 responseType: 'json',
@@ -616,11 +664,13 @@ export class TcgDropMonitor extends EventEmitter {
         } else if (target.retailer === 'walmart') {
           // Walmart store pickup probe
           try {
+            const proxyUrl = this.getNextProxyUrl();
             const res = await gotScraping.get(
               `https://www.walmart.com/orchestra/suggester/api/v1/store/search?query=${encodeURIComponent(
                 zipCode
               )}`,
               {
+                ...(proxyUrl ? { proxyUrl } : {}),
                 headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
                 timeout: { request: 5000 },
                 responseType: 'json',
@@ -683,11 +733,13 @@ export class TcgDropMonitor extends EventEmitter {
     // 1. Attempt Live Retailer Endpoint
     if (retailer === 'target' && cleanZip) {
       try {
+        const proxyUrl = this.getNextProxyUrl();
         const res = await gotScraping.get(
           `https://redsky.target.com/redsky_aggregations/v1/web/stores_nearby_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&place=${encodeURIComponent(
             cleanZip
           )}&limit=6`,
           {
+            ...(proxyUrl ? { proxyUrl } : {}),
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
             timeout: { request: 5000 },
             responseType: 'json',

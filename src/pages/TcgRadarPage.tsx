@@ -21,6 +21,7 @@ import {
   Volume2,
   VolumeX,
   WifiOff,
+  Shield,
 } from 'lucide-react';
 import {
   TcgRestockEvent,
@@ -259,6 +260,13 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
     return saved ? parseInt(saved, 10) : 25;
   });
 
+  // Dedicated Monitor Proxy Binding Configuration
+  const [selectedProxyPoolId, setSelectedProxyPoolId] = useState<string>(() => {
+    return localStorage.getItem('blank_tcg_proxy_pool_id') || '';
+  });
+
+  const boundProxyPool = proxyPools.find((p) => p.id === selectedProxyPoolId);
+
   // Manual Scan States
   const [isScanningLocal, setIsScanningLocal] = useState(false);
   const [localScanMessage, setLocalScanMessage] = useState<string | null>(null);
@@ -290,7 +298,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
 
-  // Sync feed, sound, and local pickup settings to local storage
+  // Sync feed, sound, local pickup, and proxy settings to local storage
   useEffect(() => {
     try {
       localStorage.setItem('blank_tcg_restock_feed', JSON.stringify(restockFeed.slice(0, 50)));
@@ -300,8 +308,9 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       localStorage.setItem('blank_tcg_city', city);
       localStorage.setItem('blank_tcg_zip_code', zipCode);
       localStorage.setItem('blank_tcg_search_radius', String(searchRadius));
+      localStorage.setItem('blank_tcg_proxy_pool_id', selectedProxyPoolId);
     } catch {}
-  }, [restockFeed, soundEnabled, enableLocalPickup, selectedState, city, zipCode, searchRadius]);
+  }, [restockFeed, soundEnabled, enableLocalPickup, selectedState, city, zipCode, searchRadius, selectedProxyPoolId]);
 
   // Initial check on mount
   useEffect(() => {
@@ -355,7 +364,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         retailers: selectedRetailers,
         autoSnipe,
         profileId: profiles[0]?.id,
-        proxyPoolId: proxyPools[0]?.id,
+        proxyPoolId: selectedProxyPoolId || undefined,
         enableLocalPickup,
         zipCode: zipCode.trim(),
         state: selectedState.trim(),
@@ -364,7 +373,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       };
 
       if (window.blankBotAPI?.startTcgMonitor) {
-        await window.blankBotAPI.startTcgMonitor(config);
+        await window.blankBotAPI.startTcgMonitor(config, boundProxyPool);
       }
       setIsRunning(true);
     }
@@ -439,7 +448,8 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
           zipCode.trim(),
           searchRadius,
           city.trim(),
-          selectedState.trim()
+          selectedState.trim(),
+          boundProxyPool
         );
       }
 
@@ -498,16 +508,20 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
 
       let results: TcgRestockEvent[] = [];
       if (window.blankBotAPI?.triggerTcgManualScan) {
-        results = await window.blankBotAPI.triggerTcgManualScan({
-          retailers: selectedRetailers,
-          positiveKeywords: positiveKeywords.split(',').map((s) => s.trim()).filter(Boolean),
-          negativeKeywords: negativeKeywords.split(',').map((s) => s.trim()).filter(Boolean),
-          enableLocalPickup,
-          zipCode: zipCode.trim(),
-          state: selectedState.trim(),
-          city: city.trim(),
-          searchRadiusMiles: searchRadius,
-        });
+        results = await window.blankBotAPI.triggerTcgManualScan(
+          {
+            retailers: selectedRetailers,
+            positiveKeywords: positiveKeywords.split(',').map((s) => s.trim()).filter(Boolean),
+            negativeKeywords: negativeKeywords.split(',').map((s) => s.trim()).filter(Boolean),
+            enableLocalPickup,
+            zipCode: zipCode.trim(),
+            state: selectedState.trim(),
+            city: city.trim(),
+            searchRadiusMiles: searchRadius,
+            proxyPoolId: selectedProxyPoolId || undefined,
+          },
+          boundProxyPool
+        );
       }
 
       if (results && results.length > 0) {
@@ -728,6 +742,50 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                 className="w-4 h-4 rounded text-amber-500 bg-surface-900 border-surface-700"
               />
             </label>
+
+            {/* Dedicated Monitor Proxy Binding */}
+            <div className="p-3 rounded-xl bg-surface-950 border border-surface-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-brand-400" />
+                  Dedicated Monitor Proxy Binding
+                </span>
+                {boundProxyPool && (
+                  <span className="text-[10px] text-brand-400 font-mono font-bold bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                    {boundProxyPool.proxies.length} PROXIES
+                  </span>
+                )}
+              </div>
+
+              <select
+                value={selectedProxyPoolId}
+                onChange={(e) => setSelectedProxyPoolId(e.target.value)}
+                className="w-full bg-surface-900 border border-surface-700/80 focus:border-brand-500 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none font-mono cursor-pointer"
+              >
+                <option value="">Direct WAN / Local Network (No Proxies)</option>
+                {proxyPools.map((pool) => (
+                  <option key={pool.id} value={pool.id}>
+                    {pool.name} ({pool.tier} • {pool.proxies.length} IPs)
+                  </option>
+                ))}
+              </select>
+
+              <div className="text-[10px] font-mono leading-relaxed pt-0.5">
+                {boundProxyPool ? (
+                  <span className="text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    <span>
+                      Bound: <strong>{boundProxyPool.name}</strong> (Rotating round-robin across {boundProxyPool.proxies.length} IPs)
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-surface-500 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-surface-500 flex-shrink-0" />
+                    <span>Direct IP Mode: Low-latency local WAN (Assign an ISP or residential pool for 24/7 scanning)</span>
+                  </span>
+                )}
+              </div>
+            </div>
 
             {/* Retailer Checkboxes */}
             <div>

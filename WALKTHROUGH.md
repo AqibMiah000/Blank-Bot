@@ -434,6 +434,12 @@ Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving y
    - Real-time **NET: ONLINE (N ms)** / **NO INTERNET** indicator rendered in the global header bar and radar sentinel.
    - **Offline Safeguards**: If internet access is lost, Blank immediately halts background polling, disables simulated latency, displays a top warning banner with a **"Retry Connection"** button, and prevents tasks and shelf scans from failing silently or fabricating false inventory results.
 
+9. **Dedicated Monitor Proxy Binding**:
+   - Inside the **Scanner Parameters** panel, select a dedicated proxy pool from the **Dedicated Monitor Proxy Binding** selector.
+   - You can bind high-speed datacenter, ISP, or residential rotating proxy pools exclusively to background Sentinel monitoring.
+   - When bound, all scraping requests to retailer backends (Best Buy, Target RedSky, Walmart, Amazon, and local store pickup APIs) cycle sequentially round-robin per request, distributing network traffic, bypassing IP-based rate limits, and automatically omitting any dead proxies.
+   - Leave set to **"Direct WAN / Local Network"** for zero-latency direct home internet scanning if running on slow or metered proxy setups.
+
 ---
 
 ## 17. Multi-Task Mass Edit & Quick-Task Drop Launcher

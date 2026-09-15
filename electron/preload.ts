@@ -102,8 +102,8 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
   },
 
   // 24/7 TCG Drop Radar & Restock Monitor
-  startTcgMonitor: (config: TcgMonitorConfig) =>
-    ipcRenderer.invoke('tcg-monitor:start', config),
+  startTcgMonitor: (config: TcgMonitorConfig, proxyPool?: ProxyPool) =>
+    ipcRenderer.invoke('tcg-monitor:start', config, proxyPool),
   stopTcgMonitor: () => ipcRenderer.invoke('tcg-monitor:stop'),
   getTcgMonitorStatus: () => ipcRenderer.invoke('tcg-monitor:get-status'),
   onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => {
@@ -113,10 +113,10 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
   },
   sendTcgDiscordWebhook: (url: string, event: TcgRestockEvent) =>
     ipcRenderer.invoke('tcg-monitor:send-webhook', url, event),
-  triggerTcgManualScan: (config?: Partial<TcgMonitorConfig>) =>
-    ipcRenderer.invoke('tcg-monitor:manual-scan', config),
-  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number, city?: string, state?: string) =>
-    ipcRenderer.invoke('tcg-monitor:scan-local-stores', zipCode, radiusMiles, city, state),
+  triggerTcgManualScan: (config?: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool) =>
+    ipcRenderer.invoke('tcg-monitor:manual-scan', config, proxyPool),
+  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number, city?: string, state?: string, proxyPool?: ProxyPool) =>
+    ipcRenderer.invoke('tcg-monitor:scan-local-stores', zipCode, radiusMiles, city, state, proxyPool),
 
   // Shell External Browser Launcher
   openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),

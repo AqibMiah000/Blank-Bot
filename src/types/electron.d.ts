@@ -105,13 +105,13 @@ export interface BlankBotAPI {
   onFreebieDetected: (callback: (item: AmazonFreebieItem) => void) => () => void;
 
   // 24/7 TCG Drop Radar & Restock Monitor
-  startTcgMonitor: (config: TcgMonitorConfig) => Promise<boolean>;
+  startTcgMonitor: (config: TcgMonitorConfig, proxyPool?: ProxyPool) => Promise<boolean>;
   stopTcgMonitor: () => Promise<boolean>;
   getTcgMonitorStatus: () => Promise<{ isRunning: boolean; trackedCount: number }>;
   onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => () => void;
   sendTcgDiscordWebhook: (url: string, event: TcgRestockEvent) => Promise<boolean>;
-  triggerTcgManualScan: (config?: Partial<TcgMonitorConfig>) => Promise<TcgRestockEvent[]>;
-  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number, city?: string, state?: string) => Promise<TcgRestockEvent[]>;
+  triggerTcgManualScan: (config?: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool) => Promise<TcgRestockEvent[]>;
+  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number, city?: string, state?: string, proxyPool?: ProxyPool) => Promise<TcgRestockEvent[]>;
 
   // External Browser Dispatcher
   openExternal: (url: string) => Promise<void>;
