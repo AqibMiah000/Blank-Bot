@@ -12,11 +12,13 @@ import {
   Activity,
   TrendingUp,
   ShoppingBag,
+  Radio,
 } from 'lucide-react';
 
 export type PageId =
   | 'tasks'
   | 'checkouts'
+  | 'tcg-radar'
   | 'profiles'
   | 'proxies'
   | 'accounts'
@@ -46,6 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { id: 'tasks' as PageId, label: 'Tasks', icon: Layers, badge: activeTasksCount || undefined },
     { id: 'checkouts' as PageId, label: 'Checkouts', icon: ShoppingBag, badge: checkoutsCount || undefined },
+    { id: 'tcg-radar' as PageId, label: 'TCG Radar', icon: Radio, highlight: true },
     { id: 'profiles' as PageId, label: 'Profiles', icon: CreditCard },
     { id: 'proxies' as PageId, label: 'Proxies', icon: Server },
     { id: 'accounts' as PageId, label: 'Accounts', icon: UserCheck },

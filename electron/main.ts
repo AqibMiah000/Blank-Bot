@@ -13,7 +13,8 @@ import { sendDiscordCheckoutWebhook } from './services/discord';
 import { audioService } from './services/audio';
 import { exportBackupToFile, importBackupFromFile } from './services/storage';
 import { freebiesSniper, fetchLiveAmazonDeals } from './modules/amazon';
-import { TaskItem, BillingProfile, ProxyPool, RetailAccount, FreebiesConfig, ProxyItem } from '../src/types';
+import { tcgDropMonitor, sendTcgRestockWebhook } from './services/tcg-monitor';
+import { TaskItem, BillingProfile, ProxyPool, RetailAccount, FreebiesConfig, TcgMonitorConfig, TcgRestockEvent, ProxyItem } from '../src/types';
 
 // Remove default File/Edit/View menu bar for clean, minimal UI
 Menu.setApplicationMenu(null);
@@ -100,6 +101,12 @@ function createWindow(): void {
   freebiesSniper.on('freebie_detected', (deal) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('freebies:detected', deal);
+    }
+  });
+
+  tcgDropMonitor.on('restock_detected', (event) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('tcg:restock-detected', event);
     }
   });
 
@@ -323,6 +330,23 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('freebies:fetch-live-deals', async () => {
     return fetchLiveAmazonDeals();
+  });
+
+  // 24/7 TCG Drop Radar & Restock Monitor
+  ipcMain.handle('tcg-monitor:start', async (_, config: TcgMonitorConfig) => {
+    return tcgDropMonitor.start(config);
+  });
+
+  ipcMain.handle('tcg-monitor:stop', async () => {
+    return tcgDropMonitor.stop();
+  });
+
+  ipcMain.handle('tcg-monitor:get-status', async () => {
+    return tcgDropMonitor.getStatus();
+  });
+
+  ipcMain.handle('tcg-monitor:send-webhook', async (_, url: string, event: TcgRestockEvent) => {
+    return sendTcgRestockWebhook(url, event);
   });
 
   // Shell External URL Dispatcher

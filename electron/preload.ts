@@ -9,6 +9,8 @@ import {
   TwoFactorRequest,
   FreebiesConfig,
   AmazonFreebieItem,
+  TcgMonitorConfig,
+  TcgRestockEvent,
 } from '../src/types';
 
 contextBridge.exposeInMainWorld('blankBotAPI', {
@@ -89,6 +91,19 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
     ipcRenderer.on('freebies:detected', handler);
     return () => ipcRenderer.removeListener('freebies:detected', handler);
   },
+
+  // 24/7 TCG Drop Radar & Restock Monitor
+  startTcgMonitor: (config: TcgMonitorConfig) =>
+    ipcRenderer.invoke('tcg-monitor:start', config),
+  stopTcgMonitor: () => ipcRenderer.invoke('tcg-monitor:stop'),
+  getTcgMonitorStatus: () => ipcRenderer.invoke('tcg-monitor:get-status'),
+  onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => {
+    const handler = (_: any, data: TcgRestockEvent) => callback(data);
+    ipcRenderer.on('tcg:restock-detected', handler);
+    return () => ipcRenderer.removeListener('tcg:restock-detected', handler);
+  },
+  sendTcgDiscordWebhook: (url: string, event: TcgRestockEvent) =>
+    ipcRenderer.invoke('tcg-monitor:send-webhook', url, event),
 
   // Shell External Browser Launcher
   openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),

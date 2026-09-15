@@ -9,6 +9,8 @@ import {
   TwoFactorRequest,
   AmazonFreebieItem,
   FreebiesConfig,
+  TcgRestockEvent,
+  TcgMonitorConfig,
   AppSettings
 } from './index';
 
@@ -95,6 +97,13 @@ export interface BlankBotAPI {
   stopFreebiesSniper: () => Promise<boolean>;
   fetchLiveAmazonDeals: () => Promise<AmazonFreebieItem[]>;
   onFreebieDetected: (callback: (item: AmazonFreebieItem) => void) => () => void;
+
+  // 24/7 TCG Drop Radar & Restock Monitor
+  startTcgMonitor: (config: TcgMonitorConfig) => Promise<boolean>;
+  stopTcgMonitor: () => Promise<boolean>;
+  getTcgMonitorStatus: () => Promise<{ isRunning: boolean; trackedCount: number }>;
+  onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => () => void;
+  sendTcgDiscordWebhook: (url: string, event: TcgRestockEvent) => Promise<boolean>;
 
   // External Browser Dispatcher
   openExternal: (url: string) => Promise<void>;

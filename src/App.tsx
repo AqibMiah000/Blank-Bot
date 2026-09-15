@@ -12,6 +12,7 @@ import { CaptchasPage } from './pages/CaptchasPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuthPage } from './pages/AuthPage';
 import { CheckoutsPage } from './pages/CheckoutsPage';
+import { TcgRadarPage } from './pages/TcgRadarPage';
 import { firestoreService } from './firebase/firestore-service';
 import {
   TaskItem,
@@ -551,6 +552,57 @@ export const App: React.FC = () => {
     activeProxies: totalProxies,
   };
 
+  const handleQuickSnipeTcg = async (item: {
+    productName: string;
+    retailer: Retailer;
+    identifier: string;
+    price: number;
+  }) => {
+    let targetGroup = taskGroups.find((g) => g.retailer === item.retailer);
+    if (!targetGroup) {
+      const newGroup: TaskGroup = {
+        id: `grp_${Date.now()}`,
+        name: `${item.retailer.toUpperCase()} TCG Drops`,
+        retailer: item.retailer,
+        createdAt: Date.now(),
+      };
+      await firestoreService.saveTaskGroup(newGroup);
+      setTaskGroups((prev) => [...prev, newGroup]);
+      targetGroup = newGroup;
+    }
+
+    const newTask: TaskItem = {
+      id: 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+      groupId: targetGroup.id,
+      retailer: item.retailer,
+      input: item.identifier,
+      profileId: profiles[0]?.id || '',
+      proxyPoolId: proxyPools[0]?.id || '',
+      monitorDelay: 1500,
+      retryDelay: 1000,
+      status: 'IDLE',
+      statusMessage: `Ready (TCG Snipe: ${item.productName})`,
+      flags: {
+        skipMonitor: true,
+        loopCheckout: false,
+        autoStartOnRestart: false,
+      },
+      logs: [
+        {
+          timestamp: Date.now(),
+          level: 'info',
+          message: `TCG Drop Radar Auto-Snipe provisioned for ${item.productName} ($${item.price.toFixed(2)})`,
+        },
+      ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await handleSaveTask(newTask);
+    await handleStartTask(newTask.id);
+    setCurrentPage('tasks');
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-surface-950 font-sans">
       {/* Navigation Sidebar */}
@@ -600,6 +652,15 @@ export const App: React.FC = () => {
               onDeleteCheckout={handleDeleteCheckout}
               onClearCheckouts={handleClearCheckouts}
               discordWebhookUrl={settings.discordWebhookUrl}
+            />
+          )}
+
+          {currentPage === 'tcg-radar' && (
+            <TcgRadarPage
+              onQuickSnipe={handleQuickSnipeTcg}
+              profiles={profiles}
+              proxyPools={proxyPools}
+              defaultWebhookUrl={settings.discordWebhookUrl}
             />
           )}
 

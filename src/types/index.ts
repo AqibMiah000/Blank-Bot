@@ -155,6 +155,33 @@ export interface FreebiesConfig {
   profileId: string;
 }
 
+export interface TcgRestockEvent {
+  id: string;
+  productName: string;
+  setOrSeries: string;
+  retailer: Retailer;
+  identifier: string;
+  price: number;
+  marketPrice?: number;
+  productUrl: string;
+  imageUrl?: string;
+  timestamp: number;
+  status: 'IN_STOCK' | 'OUT_OF_STOCK';
+  isDirectDrop?: boolean;
+}
+
+export interface TcgMonitorConfig {
+  enabled: boolean;
+  pollIntervalMs: number;
+  discordWebhookUrl: string;
+  positiveKeywords: string[];
+  negativeKeywords: string[];
+  retailers: Retailer[];
+  autoSnipe: boolean;
+  profileId?: string;
+  proxyPoolId?: string;
+}
+
 export interface SolverKeys {
   twoCaptcha?: string;
   capSolver?: string;
