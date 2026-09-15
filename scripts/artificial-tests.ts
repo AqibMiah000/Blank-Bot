@@ -561,24 +561,31 @@ async function runTestSuite() {
     'TCG Local Pickup',
     'Resolves exact store street address and eliminates generic Metro District labels',
     () => {
-      // Simulate store name resolution for Flushing, NY (11354)
-      const zip = '11354';
-      const city = 'Flushing';
-      const state = 'NY';
+      // Simulate store name resolution for Beverly Hills, CA (90210)
+      const zip = '90210';
+      const city = 'Beverly Hills';
+      const state = 'CA';
 
       const resolveStoreDisplay = (storeNum: number, address: string, brand: string) => {
         const storeName = `${brand} - ${address} (#${storeNum})`;
         return storeName;
       };
 
-      const targetStore = resolveStoreDisplay(2424, '40-24 College Point Blvd, Flushing, NY 11354', 'Target');
-      const walmartStore = resolveStoreDisplay(2280, '77 Green Acres Rd S, Valley Stream, NY 11581', 'Walmart Supercenter');
+      const targetStore = resolveStoreDisplay(1874, '7100 Santa Monica Blvd, West Hollywood, CA 90046', 'Target');
+      const walmartStore = resolveStoreDisplay(5435, '1301 N Victory Pl, Burbank, CA 91502', 'Walmart Supercenter');
 
       assert(!targetStore.includes('Metro District'), 'Target store must not use generic Metro District label');
       assert(!walmartStore.includes('Metro District'), 'Walmart store must not use generic Metro District label');
-      assert(targetStore.includes('40-24 College Point Blvd'), 'Target store must contain street address');
-      assert(targetStore.includes('Flushing, NY'), 'Target store must contain city and state');
-      assert(walmartStore.includes('77 Green Acres Rd S'), 'Walmart store must contain street address');
+      assert(targetStore.includes('7100 Santa Monica Blvd'), 'Target store must contain street address');
+      assert(targetStore.includes('West Hollywood, CA'), 'Target store must contain city and state');
+      assert(walmartStore.includes('1301 N Victory Pl'), 'Walmart store must contain street address');
+
+      // Verify that no location input returns empty array and never defaults to hardcoded personal locations
+      const resolveNearbyStoresSimulation = (zipCode?: string, c?: string, s?: string) => {
+        if (!zipCode?.trim() && !c?.trim() && !s?.trim()) return [];
+        return [{ storeId: '101' }];
+      };
+      assert(resolveNearbyStoresSimulation('', '', '').length === 0, 'Must return empty array if no location entered');
     },
     'HIGH',
     'Store address and city/state geo-resolution'

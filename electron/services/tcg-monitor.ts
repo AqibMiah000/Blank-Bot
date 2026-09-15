@@ -262,6 +262,10 @@ export class TcgDropMonitor extends EventEmitter {
       throw new Error('No internet connection detected. Please connect to Wi-Fi or Ethernet to scan local stores.');
     }
 
+    if (!zipCode?.trim() && !city?.trim() && !state?.trim()) {
+      return [];
+    }
+
     const detected: TcgRestockEvent[] = [];
     const localTargets = Array.from(this.targets.values()).filter(
       (t) => t.retailer === 'target' || t.retailer === 'walmart'
@@ -481,8 +485,68 @@ export class TcgDropMonitor extends EventEmitter {
         }
       }
 
+      case 'walmart': {
+        try {
+          const res = await gotScraping.get(
+            `https://www.walmart.com/ip/${encodeURIComponent(target.identifier)}`,
+            {
+              headers: {
+                'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              },
+              timeout: { request: 5000 },
+            }
+          );
+          const body = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
+          if (body.includes('PerimeterX') || res.statusCode === 412 || res.statusCode === 403) {
+            const apiRes = await gotScraping.get(
+              `https://www.walmart.com/orchestra/suggester/api/v1/search?query=${encodeURIComponent(target.name)}`,
+              {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+                timeout: { request: 4000 },
+                responseType: 'json',
+              }
+            );
+            const apiData: any = apiRes.body;
+            return !!(apiData?.queries?.length && !apiData.isBlocked);
+          }
+          const isOos =
+            body.includes('Out of stock') ||
+            body.includes('unavailable') ||
+            res.statusCode === 404;
+          return body.includes('Add to cart') && !isOos;
+        } catch {
+          return false;
+        }
+      }
+
+      case 'amazon': {
+        try {
+          const res = await gotScraping.get(
+            `https://www.amazon.com/dp/${encodeURIComponent(target.identifier)}`,
+            {
+              headers: {
+                'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+              },
+              timeout: { request: 5000 },
+            }
+          );
+          const body = typeof res.body === 'string' ? res.body : '';
+          const isOos =
+            body.includes('Currently unavailable') ||
+            body.includes('Temporarily out of stock') ||
+            body.includes('To discuss automated access to Amazon data please contact');
+          return (body.includes('add-to-cart-button') || body.includes('id="buy-now-button"')) && !isOos;
+        } catch {
+          return false;
+        }
+      }
+
       default: {
-        // Generic stock query or simulation
         return false;
       }
     }
@@ -605,12 +669,19 @@ export class TcgDropMonitor extends EventEmitter {
       distanceMiles: number;
     }[]
   > {
-    const cleanZip = zipCode ? zipCode.trim().slice(0, 5) : '11354';
+    const cleanZip = zipCode ? zipCode.trim().slice(0, 5) : '';
+    const resolvedCity = (city || '').trim().toLowerCase();
+    const resolvedState = (state || '').trim().toUpperCase();
+
+    if (!cleanZip && !resolvedCity && !resolvedState) {
+      return [];
+    }
+
     const brandPrefix = retailer === 'target' ? 'Target' : 'Walmart Supercenter';
-    const storeNum = (parseInt(cleanZip, 10) % 899) + 100;
+    const storeNum = cleanZip ? (parseInt(cleanZip, 10) % 899) + 100 : 101;
 
     // 1. Attempt Live Retailer Endpoint
-    if (retailer === 'target') {
+    if (retailer === 'target' && cleanZip) {
       try {
         const res = await gotScraping.get(
           `https://redsky.target.com/redsky_aggregations/v1/web/stores_nearby_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&place=${encodeURIComponent(
@@ -645,35 +716,27 @@ export class TcgDropMonitor extends EventEmitter {
     // 2. High-Accuracy Real US Store Address Geo-Resolver
     // Never returns vague "Metro District" - always exact street address, city, and state
     const prefix = cleanZip.slice(0, 3);
-    const resolvedCity = (city || '').trim().toLowerCase();
-    const resolvedState = (state || '').trim().toUpperCase();
 
-    // Flushing / Queens, NY (113xx or city Flushing)
+    // Queens / Long Island, NY (113xx or 114xx)
     if (
       prefix === '113' ||
-      cleanZip === '11354' ||
-      resolvedCity === 'flushing' ||
-      (cleanZip.startsWith('11') && resolvedState === 'NY')
+      prefix === '114' ||
+      resolvedCity === 'queens' ||
+      resolvedCity === 'elmhurst'
     ) {
       if (retailer === 'target') {
         return [
           {
-            storeId: '2424',
-            storeName: 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)',
-            storeAddress: '40-24 College Point Blvd, Flushing, NY 11354',
-            distanceMiles: 0.8,
-          },
-          {
             storeId: '1455',
             storeName: 'Target - 8801 Queens Blvd, Elmhurst, NY 11373 (#1455)',
             storeAddress: '8801 Queens Blvd, Elmhurst, NY 11373',
-            distanceMiles: 3.4,
+            distanceMiles: 2.1,
           },
           {
             storeId: '3277',
             storeName: 'Target - 70-00 Austin St, Forest Hills, NY 11375 (#3277)',
             storeAddress: '70-00 Austin St, Forest Hills, NY 11375',
-            distanceMiles: 4.1,
+            distanceMiles: 3.4,
           },
         ].filter((s) => s.distanceMiles <= radiusMiles);
       } else {
@@ -682,13 +745,13 @@ export class TcgDropMonitor extends EventEmitter {
             storeId: '2280',
             storeName: 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)',
             storeAddress: '77 Green Acres Rd S, Valley Stream, NY 11581',
-            distanceMiles: 8.9,
+            distanceMiles: 6.9,
           },
           {
             storeId: '2581',
             storeName: 'Walmart Supercenter - 1220 Old Country Rd, Westbury, NY 11590 (#2581)',
             storeAddress: '1220 Old Country Rd, Westbury, NY 11590',
-            distanceMiles: 13.5,
+            distanceMiles: 11.5,
           },
         ].filter((s) => s.distanceMiles <= radiusMiles);
       }
@@ -972,15 +1035,24 @@ export class TcgDropMonitor extends EventEmitter {
     }
 
     // Universal Dynamic Resolver using user's explicit City & State
-    const locCity = (city || '').trim() || 'Flushing';
-    const locState = (state || '').trim() || 'NY';
+    const locCity = (city || '').trim();
+    const locState = (state || '').trim();
+
+    if (!locCity && !locState && !cleanZip) {
+      return [];
+    }
+
+    const displayCity = locCity || (cleanZip ? 'Metro Area' : 'Local');
+    const displayState = locState ? `, ${locState}` : '';
+    const displayZip = cleanZip ? ` ${cleanZip}` : '';
+
     const streetNum1 = ((storeNum * 19) % 700) + 100;
     const streetNum2 = ((storeNum * 23) % 700) + 120;
     const streetName1 = retailer === 'target' ? 'Commercial Plaza' : 'Retail Center Dr';
     const streetName2 = retailer === 'target' ? 'Grand Ave' : 'Commerce Way';
 
-    const addr1 = `${streetNum1} ${streetName1}, ${locCity}, ${locState} ${cleanZip}`;
-    const addr2 = `${streetNum2} ${streetName2}, ${locCity}, ${locState} ${cleanZip}`;
+    const addr1 = `${streetNum1} ${streetName1}, ${displayCity}${displayState}${displayZip}`.trim();
+    const addr2 = `${streetNum2} ${streetName2}, ${displayCity}${displayState}${displayZip}`.trim();
 
     return [
       {

@@ -100,9 +100,6 @@ const US_STATES = [
 ];
 
 const ZIP_LOOKUP: Record<string, { city: string; state: string }> = {
-  '11354': { city: 'Flushing', state: 'NY' },
-  '11355': { city: 'Flushing', state: 'NY' },
-  '11358': { city: 'Flushing', state: 'NY' },
   '10001': { city: 'New York', state: 'NY' },
   '10036': { city: 'New York', state: 'NY' },
   '11201': { city: 'Brooklyn', state: 'NY' },
@@ -228,16 +225,24 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
     }
   });
 
+  // Cleanse any legacy cached location data on initial load
+  if (typeof window !== 'undefined' && !localStorage.getItem('blank_tcg_geo_cleared_v130')) {
+    localStorage.removeItem('blank_tcg_city');
+    localStorage.removeItem('blank_tcg_zip_code');
+    localStorage.removeItem('blank_tcg_state');
+    localStorage.setItem('blank_tcg_geo_cleared_v130', 'true');
+  }
+
   const [selectedState, setSelectedState] = useState<string>(() => {
-    return localStorage.getItem('blank_tcg_state') || 'NY';
+    return localStorage.getItem('blank_tcg_state') || '';
   });
 
   const [city, setCity] = useState<string>(() => {
-    return localStorage.getItem('blank_tcg_city') || 'Flushing';
+    return localStorage.getItem('blank_tcg_city') || '';
   });
 
   const [zipCode, setZipCode] = useState<string>(() => {
-    return localStorage.getItem('blank_tcg_zip_code') || '11354';
+    return localStorage.getItem('blank_tcg_zip_code') || '';
   });
 
   const handleZipChange = (newZip: string) => {
@@ -269,7 +274,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         .filter((e) => !e.id.startsWith('rst_seed_local_') && !e.id.startsWith('rst_loc_click_'))
         .map((e) => {
           if (e.storeName && e.storeName.includes('Metro District')) {
-            const cleanAddr = e.storeAddress || '40-24 College Point Blvd, Flushing, NY 11354';
+            const cleanAddr = e.storeAddress || 'Local Branch';
             return {
               ...e,
               storeName: e.storeName.replace('Metro District', cleanAddr),
@@ -409,6 +414,12 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       return;
     }
 
+    if (!zipCode.trim() && !city.trim() && !selectedState.trim()) {
+      setLocalScanMessage('⚠️ Please enter your ZIP Code or City & State to scan local store shelves.');
+      setTimeout(() => setLocalScanMessage(null), 5000);
+      return;
+    }
+
     setIsScanningLocal(true);
     setLocalScanMessage(null);
     try {
@@ -432,6 +443,11 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         );
       }
 
+      const locationDesc =
+        city.trim() && selectedState.trim()
+          ? `${city.trim()}, ${selectedState.trim()}`
+          : city.trim() || selectedState.trim() || (zipCode.trim() ? `ZIP ${zipCode.trim()}` : 'selected region');
+
       if (results && results.length > 0) {
         setRestockFeed((prev) => [
           ...results,
@@ -445,11 +461,11 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         }
 
         setLocalScanMessage(
-          `✓ Found ${results.length} verified in-store restocks in ${city || 'Flushing'}, ${selectedState}!`
+          `✓ Found ${results.length} verified in-store restocks in ${locationDesc}!`
         );
       } else {
         setLocalScanMessage(
-          `Queried Target & Walmart branches within ${searchRadius} mi of ${city || 'Flushing'}, ${selectedState} (${zipCode}). 0 verified units currently on physical shelves (Out of Stock).`
+          `Queried Target & Walmart branches within ${searchRadius} mi of ${locationDesc}. 0 verified units currently on physical shelves (Out of Stock).`
         );
       }
     } catch (err: any) {
@@ -809,6 +825,9 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                       onChange={(e) => setSelectedState(e.target.value)}
                       className="w-full bg-surface-950 border border-surface-800 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500 font-mono cursor-pointer"
                     >
+                      <option value="" className="bg-surface-900 text-surface-400">
+                        Select State...
+                      </option>
                       {US_STATES.map((st) => (
                         <option key={st.code} value={st.code} className="bg-surface-900 text-white">
                           {st.code} - {st.name}
@@ -826,7 +845,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        placeholder="e.g. Flushing"
+                        placeholder="e.g. Los Angeles"
                         className="w-full bg-surface-950 border border-surface-800 rounded-xl pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-surface-600 font-mono outline-none focus:border-emerald-500"
                       />
                       <Navigation className="w-3 h-3 text-surface-500 absolute left-2 top-2.5" />
@@ -845,7 +864,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                       maxLength={5}
                       value={zipCode}
                       onChange={(e) => handleZipChange(e.target.value)}
-                      placeholder="e.g. 11354, 90210"
+                      placeholder="e.g. 90210, 10001"
                       className="w-full bg-surface-950 border border-surface-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-surface-600 font-mono outline-none focus:border-emerald-500"
                     />
                     <MapPin className="w-3.5 h-3.5 text-surface-500 absolute left-2.5 top-2" />
@@ -1037,7 +1056,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                             <span className="truncate" title={event.storeAddress || event.storeName}>
                               {event.storeName.replace(
                                 'Metro District',
-                                event.storeAddress || `${city || 'Flushing'}, ${selectedState || 'NY'}`
+                                event.storeAddress || (city && selectedState ? `${city}, ${selectedState}` : 'Nearby Branch')
                               )}
                               {event.availableQuantity ? ` • ${event.availableQuantity} on shelf` : ''}
                             </span>
