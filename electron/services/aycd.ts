@@ -67,7 +67,7 @@ export class AYCDAutoSolveService {
         headers: {
           'client-key': key,
           'access-token': token,
-          'User-Agent': 'BlankBot-Desktop/1.20.0',
+          'User-Agent': 'BlankBot-Desktop/1.30.0',
         },
         timeout: { request: 6000 },
         responseType: 'json',
