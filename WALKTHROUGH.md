@@ -22,6 +22,8 @@
 13. [Sound Packs, 17 Stealth Themes & Custom Studio](#13-sound-packs-17-stealth-themes--custom-studio)
 14. [Troubleshooting & Error Code Glossary](#14-troubleshooting--error-code-glossary)
 15. [Frequently Asked Questions (FAQ)](#15-frequently-asked-questions-faq)
+16. [24/7 TCG Drop Radar & Local Store Pickup Sentinel (v1.30)](#16-247-tcg-drop-radar--local-store-pickup-sentinel-v130)
+17. [Multi-Task Mass Edit & Quick-Task Drop Launcher](#17-multi-task-mass-edit--quick-task-drop-launcher)
 
 ---
 
@@ -380,6 +382,59 @@ Under **Settings → UI Theme & Stealth Aesthetics**, customize Blank's dark-mod
 
 #### Q: How many tasks can I run at once?
 **A:** On a standard 8GB/16GB RAM computer, you can comfortably run 50 to 200 concurrent tasks. Always ensure you have enough proxies so your IPs don't get throttled.
+
+---
+
+## 16. 24/7 TCG Drop Radar & Local Store Pickup Sentinel (v1.30)
+
+Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving you automated, around-the-clock restock detection for high-demand collectible trading card products across **Best Buy, Target, Walmart, and Amazon**.
+
+### How It Works:
+1. **Continuous 24/7 Inventory Listener**:
+   - Blank's background daemon queries live retailer catalog endpoints at configurable intervals (e.g. 15s to 30s).
+   - Monitors top-velocity sets including:
+     - **Pokémon**: *Mega Evolution: Chaos Rising* Booster Boxes & ETBs, *Destined Rivals* Booster Bundles, *Journey Together* ETBs, *Prismatic Evolutions* Booster Bundles, and *Scarlet & Violet 151*.
+     - **One Piece Card Game**: *The Azure Emperor [OP-10]*.
+   - Uses sub-second state diffing: the instant an item transitions from `OUT_OF_STOCK` to `IN_STOCK`, an alert triggers immediately.
+
+2. **Target & Walmart Local Store Pickup & Shelf Restock Radar**:
+   - In the **TCG Radar** page, enable **"Scan In-Store / Curbside"**.
+   - Enter your **5-digit US ZIP Code** (e.g. `90210`, `10001`, `75001`).
+   - Select your **Search Radius**: `10 mi`, `25 mi`, or `50 mi`.
+   - Blank queries local store fulfillment systems (Target RedSky `nearby_stores` / `pdp_client_v1` with store ID, and Walmart store locator) to detect:
+     - Exact shelf stock counts at nearby branches (e.g. *Target - Beverly Hills West (#3991) • 6 units on shelf*).
+     - Curbside drive-up readiness vs. in-store physical shelf availability.
+     - Mileage from your ZIP code.
+
+3. **Discord Drop Webhooks**:
+   - Paste your Discord channel webhook URL into the **Discord Drop Webhook** input.
+   - Click **"Send Test Drop Ping"** to verify formatting and connectivity.
+   - Restock alerts dispatch rich Discord embeds with high-res product art, MSRP vs. market spread, branch location, distance in miles, and a direct reservation link.
+
+4. **1-Click Auto-Snipe**:
+   - Check the **"Auto-Snipe Drop Tasks"** toggle in the scanner settings.
+   - When active, Blank won't just ping your Discord—it immediately spawns and executes a high-speed checkout task using your default profile and proxy pool before manual buyers can even open their notifications.
+
+---
+
+## 17. Multi-Task Mass Edit & Quick-Task Drop Launcher
+
+Version 1.30 makes managing dozens or hundreds of tasks effortless with two new productivity features:
+
+### 1. Multi-Task Mass Edit Modal
+- In the **Tasks** tab, use the checkboxes on task rows (or click the header checkbox to select all).
+- When 2 or more tasks are selected, a floating blue **"Mass Edit (N Tasks)"** action button appears at the top.
+- Clicking it opens the **Mass Edit Modal**, allowing you to update:
+  - **Billing Profile** (switch all selected tasks to a new card/address)
+  - **Proxy Pool** (re-route all tasks to an ISP or residential pool)
+  - **Execution Mode** (toggle between `FAST` direct protocol and `STEALTH` human emulation)
+  - **Monitor Delay & Retry Delay**
+  - **Drop Schedule Time** (synchronize launch timers across 50+ tasks in one click)
+
+### 2. Inline Quick-Task Drop Launcher
+- Located right in the **Tasks** page header bar.
+- Paste any product URL (Amazon, Best Buy, Target, Walmart) or raw SKU/ASIN.
+- Click **"Quick Task"** to instantly generate, configure, and launch a checkout task with your default profile and proxies in under 1 second.
 
 ---
 

@@ -9,13 +9,23 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/AqibMiah000/Blank-Bot"><img src="https://img.shields.io/badge/Version-v1.30-00f0ff?style=for-the-badge&logo=electron&logoColor=white" alt="Version v1.30" /></a>
   <a href="https://github.com/AqibMiah000/Blank-Bot"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-00f0ff?style=for-the-badge&logo=windows&logoColor=white" alt="Platform" /></a>
   <a href="https://github.com/AqibMiah000/Blank-Bot"><img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" /></a>
   <a href="https://github.com/AqibMiah000/Blank-Bot"><img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
-  <a href="https://github.com/AqibMiah000/Blank-Bot"><img src="https://img.shields.io/badge/Electron-35-47848F?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" /></a>
   <a href="https://github.com/AqibMiah000/Blank-Bot"><img src="https://img.shields.io/badge/Security-AES--256--GCM-F59E0B?style=for-the-badge&logo=shield&logoColor=white" alt="Security" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-white?style=for-the-badge" alt="License" /></a>
 </p>
+
+---
+
+### 📦 Direct Downloads (v1.30 Release)
+
+| Platform | Format | Direct Download |
+| :--- | :--- | :--- |
+| **Windows (x64)** | `.zip` (Portable) | [Download Blank-v1.30-Windows-x64.zip](https://github.com/AqibMiah000/Blank-Bot/releases/download/v1.30/Blank-v1.30-Windows-x64.zip) |
+| **macOS (Apple Silicon)** | `.dmg` (Installer) | [Download Blank-1.30.0-arm64.dmg](https://github.com/AqibMiah000/Blank-Bot/releases/download/v1.30/Blank-1.30.0-arm64.dmg) |
+| **macOS (Apple Silicon)** | `.zip` (Portable) | [Download Blank-1.30.0-arm64-mac.zip](https://github.com/AqibMiah000/Blank-Bot/releases/download/v1.30/Blank-1.30.0-arm64-mac.zip) |
 
 ---
 
@@ -27,17 +37,19 @@
 
 | Feature | Description | Status |
 | :--- | :--- | :---: |
+| **24/7 TCG Drop Radar & Sentinel** | Real-time 24/7 inventory scanner tracking Pokémon (*Chaos Rising*, *Destined Rivals*, *Journey Together*, *Prismatic Evolutions*, *151*) and One Piece (*OP-10*) across Best Buy, Target, Walmart, and Amazon. | ⚡ v1.30 |
+| **Target & Walmart Local Shelf Radar** | Scans Target and Walmart stores within 10, 25, or 50 miles of your ZIP code for physical shelf restocks, exact quantities, and curbside pickup readiness. | ⚡ v1.30 |
+| **Rich Discord Restock Webhooks** | Dispatches instant drop notifications with product art, retail MSRP vs. market spread, local branch mileage, and 1-click Auto-Snipe. | ⚡ v1.30 |
+| **Multi-Task Mass Edit Modal** | Batch-update profiles, proxy pools, mode (FAST/STEALTH), delays, and scheduled drop times across dozens of tasks at once. | ⚡ v1.30 |
+| **Inline Quick-Task Launcher** | Paste any retailer product link or SKU directly into the Tasks header for instant single-task execution. | ⚡ v1.30 |
 | **Direct Protocol Checkout** | Sub-second checkout via HTTP/2 and raw TLS client-hello emulation (`got-scraping`). | ✅ Active |
 | **Multi-Retailer Engine** | Native checkout workflows for **Amazon US, Best Buy, Walmart, Target, and Apple**. | ✅ Active |
 | **Live Market & TCG Analytics** | Real-time secondary prices, MSRP profit spreads, ROI%, multi-category filtering, custom SKU tracking & 1-click task provisioning. | ✅ Active |
 | **17 Stealth Themes & Custom Hex Studio** | Searchable theme dropdown with 17 curated stealth presets plus a built-in Custom Theme Studio for arbitrary primary/secondary hex codes. | ✅ Active |
 | **AYCD Toolbox Integration** | 1:1 integration with AYCD AutoSolve (OneClick) & Profile Builder (JSON/CSV bidirectional sync). | ✅ Active |
-| **Mass SKU Multiplier** | Paste 50+ SKUs at once with automatic round-robin profile allocation. | ✅ Active |
 | **Native Captcha Harvesters** | Floating persistent browser windows for Google 0.90 trust score and YouTube warming. | ✅ Active |
 | **Automated IMAP 2FA** | Background SSL worker retrieves 6-digit email OTPs in `<200ms` hands-free. | ✅ Active |
 | **Live Freebies & Deals** | Automated glitch and deep-discount monitoring with instant 1-click buy or OS browser launch. | ✅ Active |
-| **6 Synthesized Sound Packs** | Real-time Web Audio synthesis featuring Refract Cyan, Cyber Laser, Retro 8-bit, and more. | ✅ Active |
-| **Discord Remote Control** | Mobile remote commands (`/start [group]`, `/stop all`, `/status`) and rich embed webhooks. | ✅ Active |
 | **AES-256-GCM Local Vault** | Card numbers (PANs) and credentials are encrypted on your device before disk write. | ✅ Active |
 
 ---
