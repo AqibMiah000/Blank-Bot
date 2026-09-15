@@ -168,6 +168,9 @@ export interface TcgRestockEvent {
   timestamp: number;
   status: 'IN_STOCK' | 'OUT_OF_STOCK';
   isDirectDrop?: boolean;
+  isLeakOrEarlyDrop?: boolean;
+  projectedDropWindow?: string;
+  releaseDate?: string;
 }
 
 export interface TcgMonitorConfig {

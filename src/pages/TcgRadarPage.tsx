@@ -39,41 +39,76 @@ interface TcgRadarPageProps {
 const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
   {
     id: 'rst_seed_1',
-    productName: 'Pokémon: Chaos Rising Booster Box (36 Booster Packs)',
+    productName: 'Pokémon TCG: Mega Evolution Chaos Rising Booster Box',
     setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
     retailer: 'bestbuy',
-    identifier: '6618921',
+    identifier: '6579822',
     price: 161.64,
     marketPrice: 289.00,
-    productUrl: 'https://www.bestbuy.com/site/pokemon-trading-card-game-chaos-rising-booster-box/6618921.p',
+    productUrl: 'https://www.bestbuy.com/site/searchpage.jsp?st=pokemon+trading+card+game',
     timestamp: Date.now() - 1000 * 60 * 3, // 3 mins ago
     status: 'IN_STOCK',
     isDirectDrop: true,
+    isLeakOrEarlyDrop: true,
+    projectedDropWindow: 'Thursdays 10:00 AM - 11:30 AM EST (Restock Wave)',
   },
   {
     id: 'rst_seed_2',
+    productName: 'Pokémon TCG: 151 Booster Bundle (6 Packs)',
+    setOrSeries: 'Scarlet & Violet: 151 Special Set',
+    retailer: 'bestbuy',
+    identifier: '6548485',
+    price: 28.99,
+    marketPrice: 49.00,
+    productUrl: 'https://www.bestbuy.com/site/pokemon-pokemon-tcg-scarlet-violet-3-5-151-booster-bundle/6548485.p?skuId=6548485',
+    timestamp: Date.now() - 1000 * 60 * 7,
+    status: 'IN_STOCK',
+    isDirectDrop: true,
+    projectedDropWindow: 'High-Velocity Restock Spike',
+  },
+  {
+    id: 'rst_seed_3',
+    productName: 'Pokémon TCG: Prismatic Evolutions Booster Bundle (6 Packs)',
+    setOrSeries: 'Special: Prismatic Evolutions (SV08.5)',
+    retailer: 'amazon',
+    identifier: 'B0DHQ6Z9PQ',
+    price: 26.94,
+    marketPrice: 62.00,
+    productUrl: 'https://www.amazon.com/dp/B0DHQ6Z9PQ',
+    timestamp: Date.now() - 1000 * 60 * 14,
+    status: 'IN_STOCK',
+    isDirectDrop: true,
+    isLeakOrEarlyDrop: true,
+    projectedDropWindow: 'Amazon Flash Restock Waves (Unscheduled Lightning Drops)',
+  },
+  {
+    id: 'rst_seed_4',
     productName: 'One Piece Card Game: The Azure Emperor Booster Box [OP-10]',
     setOrSeries: 'One Piece Card Game [OP-10]',
     retailer: 'amazon',
     identifier: 'B0DQ8917ZY',
     price: 107.76,
     marketPrice: 195.00,
-    productUrl: 'https://www.amazon.com/dp/B0DQ8917ZY',
-    timestamp: Date.now() - 1000 * 60 * 12, // 12 mins ago
+    productUrl: 'https://www.amazon.com/s?k=one+piece+card+game+booster+box',
+    timestamp: Date.now() - 1000 * 60 * 22,
     status: 'IN_STOCK',
     isDirectDrop: true,
+    isLeakOrEarlyDrop: true,
+    projectedDropWindow: 'Direct Bandai Allocation Restock',
   },
   {
-    id: 'rst_seed_3',
-    productName: 'Pokémon: Destined Rivals Booster Bundle (6 Packs)',
+    id: 'rst_seed_5',
+    productName: 'Pokémon TCG: Destined Rivals Booster Bundle (6 Packs)',
     setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
     retailer: 'target',
     identifier: '90184421',
     price: 26.94,
     marketPrice: 48.00,
-    productUrl: 'https://www.target.com/p/pokemon-tcg-destined-rivals-booster-bundle/-/A-90184421',
-    timestamp: Date.now() - 1000 * 60 * 27, // 27 mins ago
+    productUrl: 'https://www.target.com/s?searchTerm=pokemon+booster+bundle',
+    timestamp: Date.now() - 1000 * 60 * 35,
     status: 'IN_STOCK',
+    isLeakOrEarlyDrop: true,
+    projectedDropWindow: 'Target RedSky Inventory Pulsing: 6:00 AM - 8:00 AM EST',
   },
 ];
 
@@ -282,7 +317,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                 <Bell className="w-3.5 h-3.5 text-brand-400" />
                 Discord Drop Webhook
               </span>
-              <span className="text-[10px] text-surface-400 font-mono">PokePing Style</span>
+              <span className="text-[10px] text-brand-400 font-mono font-semibold">Blank Sentinel Alert</span>
             </div>
 
             <input
@@ -471,11 +506,24 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                             <Clock className="w-3 h-3" />
                             {formatTimeAgo(event.timestamp)}
                           </span>
+                          {event.isLeakOrEarlyDrop && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-purple-300" />
+                              Advance Drop Intel
+                            </span>
+                          )}
                         </div>
 
                         <h4 className="text-xs font-bold text-white truncate mt-1">
                           {event.productName}
                         </h4>
+
+                        {event.projectedDropWindow && (
+                          <div className="text-[11px] font-mono text-purple-300 mt-0.5 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>Projected Pattern: {event.projectedDropWindow}</span>
+                          </div>
+                        )}
 
                         <div className="flex items-center space-x-3 text-[11px] font-mono mt-0.5">
                           <span className="text-surface-400">
