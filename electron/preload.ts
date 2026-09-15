@@ -74,6 +74,8 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
   importBackup: () => ipcRenderer.invoke('storage:import'),
   saveSettings: (settings: any) => ipcRenderer.invoke('storage:save-settings', settings),
   getSettings: () => ipcRenderer.invoke('storage:get-settings'),
+  saveCheckouts: (checkouts: any[]) => ipcRenderer.invoke('storage:save-checkouts', checkouts),
+  getCheckouts: () => ipcRenderer.invoke('storage:get-checkouts'),
   setStoreItem: (key: string, data: any) => ipcRenderer.invoke('storage:set-item', key, data),
   getStoreItem: (key: string) => ipcRenderer.invoke('storage:get-item', key),
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Clock, Zap, Repeat, PlayCircle } from 'lucide-react';
+import { X, Clock, Zap, Repeat, PlayCircle, ShieldCheck } from 'lucide-react';
 import {
   Retailer,
   TaskItem,
@@ -41,6 +41,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [skipMonitor, setSkipMonitor] = useState<boolean>(initialTask?.flags?.skipMonitor || false);
   const [loopCheckout, setLoopCheckout] = useState<boolean>(initialTask?.flags?.loopCheckout || false);
   const [autoStartOnRestart, setAutoStartOnRestart] = useState<boolean>(initialTask?.flags?.autoStartOnRestart || false);
+  const [dryRun, setDryRun] = useState<boolean>(initialTask?.flags?.dryRun || false);
 
   // Epoch Scheduler
   const [useSchedule, setUseSchedule] = useState<boolean>(Boolean(initialTask?.scheduledStartEpoch));
@@ -81,6 +82,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         skipMonitor,
         loopCheckout,
         autoStartOnRestart,
+        dryRun,
       },
       scheduledStartEpoch,
     });
@@ -288,6 +290,24 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </span>
                 <span className="text-[11px] text-surface-400 block">
                   Automatically restores active worker execution if system restarts.
+                </span>
+              </div>
+            </label>
+
+            <label className="flex items-center space-x-3 p-2 rounded-lg bg-surface-950/60 border border-surface-800 cursor-pointer hover:border-surface-700">
+              <input
+                type="checkbox"
+                checked={dryRun}
+                onChange={(e) => setDryRun(e.target.checked)}
+                className="w-4 h-4 rounded text-amber-500 bg-surface-900 border-surface-700"
+              />
+              <div className="text-xs">
+                <span className="font-semibold text-amber-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  Simulated Dry-Run (Testing Mode)
+                </span>
+                <span className="text-[11px] text-surface-400 block">
+                  Simulates full carting & checkout without charging payment cards. Tagged with [DRY-RUN].
                 </span>
               </div>
             </label>

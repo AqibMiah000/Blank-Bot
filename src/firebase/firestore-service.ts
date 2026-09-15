@@ -16,6 +16,7 @@ import {
   ProxyPool,
   RetailAccount,
   AppSettings,
+  CheckoutRecord,
 } from '../types';
 
 export class FirestoreSyncService {
@@ -386,6 +387,63 @@ export class FirestoreSyncService {
     // 3. Browser LocalStorage fallback
     const local = this.getLocal<AppSettings>('settings', defaultSettings);
     return { ...defaultSettings, ...local };
+  }
+
+  // --- CHECKOUTS / ORDERS ---
+  public async getCheckouts(): Promise<CheckoutRecord[]> {
+    if (typeof window !== 'undefined' && window.blankBotAPI?.getCheckouts) {
+      try {
+        const disk = await window.blankBotAPI.getCheckouts();
+        if (Array.isArray(disk) && disk.length > 0) {
+          this.setLocal('checkouts', disk);
+          return disk;
+        }
+      } catch (err) {
+        console.warn('Native checkouts fetch error:', err);
+      }
+    }
+    return this.getLocal<CheckoutRecord[]>('checkouts', []);
+  }
+
+  public async saveCheckout(record: CheckoutRecord): Promise<void> {
+    const list = await this.getCheckouts();
+    const idx = list.findIndex((c) => c.id === record.id);
+    if (idx >= 0) list[idx] = record;
+    else list.unshift(record);
+    this.setLocal('checkouts', list);
+
+    if (typeof window !== 'undefined' && window.blankBotAPI?.saveCheckouts) {
+      try {
+        await window.blankBotAPI.saveCheckouts(list);
+      } catch (err) {
+        console.warn('Native checkouts save error:', err);
+      }
+    }
+  }
+
+  public async deleteCheckout(id: string): Promise<void> {
+    const list = await this.getCheckouts();
+    const filtered = list.filter((c) => c.id !== id);
+    this.setLocal('checkouts', filtered);
+
+    if (typeof window !== 'undefined' && window.blankBotAPI?.saveCheckouts) {
+      try {
+        await window.blankBotAPI.saveCheckouts(filtered);
+      } catch (err) {
+        console.warn('Native checkouts save error:', err);
+      }
+    }
+  }
+
+  public async clearCheckouts(): Promise<void> {
+    this.setLocal('checkouts', []);
+    if (typeof window !== 'undefined' && window.blankBotAPI?.saveCheckouts) {
+      try {
+        await window.blankBotAPI.saveCheckouts([]);
+      } catch (err) {
+        console.warn('Native checkouts clear error:', err);
+      }
+    }
   }
 }
 

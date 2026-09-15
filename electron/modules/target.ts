@@ -63,17 +63,48 @@ export class TargetWorker extends BaseTaskWorker {
     if (this.isStopped) return;
 
     // 4. In-Line Settlement
-    this.updateStatus('CHECKING_OUT', 'Executing Target checkout transaction...');
-    await this.sleep(260);
-
     const latency = Date.now() - startCheckoutTime;
-    const orderId = `TGT-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
 
-    this.updateStatus('SUCCESS', `Target Order Placed! #${orderId}`, {
-      latency,
-      orderId,
-      level: 'success',
-    });
+    if (this.task.flags.dryRun) {
+      const orderId = `DRY-RUN-TGT-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+      this.updateStatus('SUCCESS', `[DRY-RUN] Target Simulation Complete! #${orderId}`, {
+        latency,
+        orderId,
+        level: 'info',
+      });
+      return;
+    }
+
+    if (!this.profile || !this.profile.payment || !this.profile.payment.maskedPan) {
+      this.updateStatus('FAILED', 'Target checkout halted: Missing valid billing payment profile.', {
+        level: 'error',
+      });
+      return;
+    }
+
+    this.updateStatus('CHECKING_OUT', 'Executing Target checkout transaction...');
+    try {
+      const checkoutRes = await this.client.post('https://api.target.com/payment_instructions/v1', {
+        tcin: this.tcin,
+        paymentType: 'CREDIT_CARD',
+      });
+
+      if (checkoutRes.statusCode === 200 && checkoutRes.body?.order_id) {
+        this.updateStatus('SUCCESS', `Target Order Placed! #${checkoutRes.body.order_id}`, {
+          latency,
+          orderId: checkoutRes.body.order_id,
+          level: 'success',
+        });
+      } else {
+        this.updateStatus(
+          'FAILED',
+          `Target checkout declined: ${checkoutRes.body?.error_description || 'RedCard / payment verification required'}`,
+          { level: 'error' }
+        );
+      }
+    } catch (err: any) {
+      this.updateStatus('FAILED', `Target transaction declined: ${err.message}`, { level: 'error' });
+    }
 
     if (this.task.flags.loopCheckout) {
       await this.sleep(1500);
@@ -83,9 +114,38 @@ export class TargetWorker extends BaseTaskWorker {
   private async monitorStock(): Promise<void> {
     this.updateStatus('MONITORING', `Checking Target inventory for TCIN ${this.tcin}...`);
     while (!this.isStopped) {
-      await this.sleep(this.task.monitorDelay || 3500);
-      this.log(`TCIN ${this.tcin} in stock!`, 'success');
-      break;
+      try {
+        const res = await this.client.get(
+          `https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin=${this.tcin}&store_id=none&pricing_store_id=none`,
+          {
+            'Accept': 'application/json',
+          }
+        );
+
+        if (res.statusCode === 404) {
+          this.updateStatus('FAILED', `Target product not found for TCIN ${this.tcin}`, { level: 'error' });
+          return;
+        }
+
+        const fulfillment = res.body?.data?.product?.fulfillment;
+        const buyStatus = fulfillment?.shipping_options?.availability_status;
+        const inStock = buyStatus === 'IN_STOCK' || fulfillment?.is_out_of_stock_in_all_store_locations === false;
+
+        if (inStock) {
+          this.log(`TCIN ${this.tcin} in stock! Availability: ${buyStatus || 'Available'}`, 'success');
+          break;
+        }
+
+        // Stay in MONITORING! Do NOT fake success!
+        this.log(
+          `TCIN ${this.tcin} is Out of Stock (${buyStatus || 'OOS'}). Polling again in ${this.task.monitorDelay || 3500}ms...`
+        );
+        await this.sleep(this.task.monitorDelay || 3500);
+      } catch (err: any) {
+        this.log(`Target monitor ping error: ${err.message}`, 'warn');
+        this.rotateProxy();
+        await this.sleep(this.task.retryDelay || 2000);
+      }
     }
   }
 

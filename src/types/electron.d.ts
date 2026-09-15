@@ -111,6 +111,8 @@ export interface BlankBotAPI {
   // Native Persistent File Storage (100% durable across restarts & updates)
   saveSettings: (settings: any) => Promise<{ success: boolean; message?: string }>;
   getSettings: () => Promise<any>;
+  saveCheckouts: (checkouts: any[]) => Promise<{ success: boolean; message?: string }>;
+  getCheckouts: () => Promise<any[]>;
   setStoreItem: (key: string, data: any) => Promise<{ success: boolean; message?: string }>;
   getStoreItem: (key: string) => Promise<any>;
 }

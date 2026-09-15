@@ -36,7 +36,7 @@ jobs:
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.20
+          tag_name: v1.30
           files: |
             release/*.dmg
             release/*.zip

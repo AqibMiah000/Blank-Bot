@@ -65,7 +65,163 @@ const CACHE_TTL_MS = 3 * 60 * 1000; // 3 Minutes
 
 export const SEED_MARKET_ITEMS: MarketItem[] = [
   // ==========================================
-  // POKÉMON TCG — NEWEST & HIGH-DEMAND SETS
+  // POKÉMON MEGA EVOLUTION: CHAOS RISING (ME04) — BRAND NEW 2026
+  // ==========================================
+  {
+    id: 'poke-chaos-bb',
+    name: 'Chaos Rising Booster Box (36 Booster Packs)',
+    setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
+    category: 'pokemon',
+    retailer: 'bestbuy',
+    identifier: '6618921',
+    msrp: 161.64,
+    marketPrice: 289.00,
+    volume24h: '4,120 pre-orders',
+    demand: 'ultra_high',
+    lastUpdated: Date.now(),
+    change24h: 14.8,
+    trend: 'up',
+    notes: 'Mega Greninja ex, Mega Floette ex, and Mega Pyroar ex chase. Premier Mega Evolution set.',
+  },
+  {
+    id: 'poke-chaos-etb',
+    name: 'Chaos Rising Elite Trainer Box',
+    setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
+    category: 'pokemon',
+    retailer: 'target',
+    identifier: '89541290',
+    msrp: 54.99,
+    marketPrice: 115.00,
+    volume24h: '5,840 pre-orders',
+    demand: 'ultra_high',
+    lastUpdated: Date.now(),
+    change24h: 18.2,
+    trend: 'up',
+    notes: 'Exclusive Mega Greninja illustration rare promo card + 9 booster packs.',
+  },
+  {
+    id: 'poke-chaos-bundle',
+    name: 'Chaos Rising Booster Bundle (6 Packs)',
+    setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
+    category: 'pokemon',
+    retailer: 'amazon',
+    identifier: 'B0DR9K2M8L',
+    msrp: 29.99,
+    marketPrice: 62.50,
+    volume24h: '3,950 sales',
+    demand: 'ultra_high',
+    lastUpdated: Date.now(),
+    change24h: 9.4,
+    trend: 'up',
+    notes: 'High-margin retail drop target. Immediate instant sellouts.',
+  },
+  {
+    id: 'poke-chaos-blister',
+    name: 'Chaos Rising 3-Pack Blister (Mega Pyroar ex Promo)',
+    setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
+    category: 'pokemon',
+    retailer: 'walmart',
+    identifier: '98452109',
+    msrp: 15.99,
+    marketPrice: 29.50,
+    volume24h: '2,110 sales',
+    demand: 'high',
+    lastUpdated: Date.now(),
+    change24h: 6.5,
+    trend: 'up',
+    notes: 'Walmart exclusive blister pack with foil promo.',
+  },
+
+  // ==========================================
+  // POKÉMON SCARLET & VIOLET: DESTINED RIVALS (SV10) — 2025
+  // ==========================================
+  {
+    id: 'poke-destined-bb',
+    name: 'Destined Rivals Booster Box (36 Packs)',
+    setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
+    category: 'pokemon',
+    retailer: 'bestbuy',
+    identifier: '6615432',
+    msrp: 161.64,
+    marketPrice: 245.00,
+    volume24h: '3,240 sales',
+    demand: 'ultra_high',
+    lastUpdated: Date.now(),
+    change24h: 8.9,
+    trend: 'up',
+    notes: "Team Rocket's Mewtwo ex & Cynthia's Garchomp ex iconic rivalry showcase.",
+  },
+  {
+    id: 'poke-destined-etb',
+    name: 'Destined Rivals Elite Trainer Box',
+    setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
+    category: 'pokemon',
+    retailer: 'target',
+    identifier: '89512344',
+    msrp: 54.99,
+    marketPrice: 98.00,
+    volume24h: '3,600 sales',
+    demand: 'ultra_high',
+    lastUpdated: Date.now(),
+    change24h: 11.2,
+    trend: 'up',
+    notes: "Team Rocket foil promo card, 9 booster packs, custom deck box.",
+  },
+  {
+    id: 'poke-destined-bundle',
+    name: 'Destined Rivals Booster Bundle (6 Packs)',
+    setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
+    category: 'pokemon',
+    retailer: 'amazon',
+    identifier: 'B0DQ87LM9P',
+    msrp: 29.99,
+    marketPrice: 54.00,
+    volume24h: '2,890 sales',
+    demand: 'high',
+    lastUpdated: Date.now(),
+    change24h: 7.1,
+    trend: 'up',
+    notes: 'Quick-flip retail bundle for Amazon and Best Buy drops.',
+  },
+
+  // ==========================================
+  // POKÉMON SCARLET & VIOLET: JOURNEY TOGETHER (SV09) — 2025
+  // ==========================================
+  {
+    id: 'poke-journey-bb',
+    name: 'Journey Together Booster Box (36 Packs)',
+    setOrSeries: 'Scarlet & Violet: Journey Together (SV09)',
+    category: 'pokemon',
+    retailer: 'bestbuy',
+    identifier: '6612098',
+    msrp: 161.64,
+    marketPrice: 218.00,
+    volume24h: '2,750 sales',
+    demand: 'ultra_high',
+    lastUpdated: Date.now(),
+    change24h: 5.4,
+    trend: 'up',
+    notes: "Trainer's Pokémon expansion (Iono, Lillie, N, Hop). High collector velocity.",
+  },
+  {
+    id: 'poke-journey-etb',
+    name: 'Journey Together Elite Trainer Box',
+    setOrSeries: 'Scarlet & Violet: Journey Together (SV09)',
+    category: 'pokemon',
+    retailer: 'target',
+    identifier: '89498211',
+    msrp: 54.99,
+    marketPrice: 86.50,
+    volume24h: '2,430 sales',
+    demand: 'high',
+    lastUpdated: Date.now(),
+    change24h: 4.2,
+    trend: 'up',
+    notes: "Includes exclusive Iono's Bellibolt promo card and accessories.",
+  },
+
+  // ==========================================
+  // POKÉMON TCG — PRISMATIC EVOLUTIONS & SPECIAL SETS
   // ==========================================
   {
     id: 'poke-prism-etb',
@@ -633,13 +789,20 @@ export function getMarketAnalytics(forceRefresh: boolean = false): {
   const customItems = getCustomMarketItems();
 
   if (!cachedItems || forceRefresh || now - lastFetchEpoch > CACHE_TTL_MS) {
-    cachedItems = SEED_MARKET_ITEMS.map((item) => {
-      const variance = forceRefresh ? (Math.random() * 2 - 1) * 0.015 : 0;
-      const updatedPrice = Math.round(item.marketPrice * (1 + variance) * 100) / 100;
+    cachedItems = SEED_MARKET_ITEMS.map((item, idx) => {
+      const variance = forceRefresh ? (Math.sin(idx * 7.3 + Date.now() / 15000) * 0.02) : 0;
+      const updatedPrice = Math.max(item.msrp, Math.round(item.marketPrice * (1 + variance) * 100) / 100);
+      const change24h =
+        item.change24h !== undefined
+          ? item.change24h
+          : Math.round(((item.demand === 'ultra_high' ? 8.5 : item.demand === 'high' ? 4.2 : 1.2) + Math.sin(idx) * 2) * 10) / 10;
+      const trend = change24h >= 0.5 ? 'up' : change24h <= -0.5 ? 'down' : 'flat';
 
       return {
         ...item,
         marketPrice: updatedPrice,
+        change24h,
+        trend,
         lastUpdated: now,
       };
     });

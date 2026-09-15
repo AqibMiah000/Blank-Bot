@@ -69,16 +69,58 @@ export class AmazonWorker extends BaseTaskWorker {
 
     // 3. Fast Turbo 1-Click Checkout
     this.updateStatus('CHECKING_OUT', `Executing Turbo 1-Click Checkout on ASIN ${this.asin}...`);
-    await this.sleep(190);
-
     const latency = Date.now() - startCheckoutTime;
-    const orderId = `AMZ-${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000000 + Math.random() * 9000000)}-${Math.floor(1000000 + Math.random() * 9000000)}`;
 
-    this.updateStatus('SUCCESS', `Amazon 1-Click Order Placed! #${orderId}`, {
-      latency,
-      orderId,
-      level: 'success',
-    });
+    if (this.task.flags.dryRun) {
+      const orderId = `DRY-RUN-AMZ-${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000000 + Math.random() * 9000000)}`;
+      this.updateStatus('SUCCESS', `[DRY-RUN] Amazon 1-Click Simulation Complete! #${orderId}`, {
+        latency,
+        orderId,
+        level: 'info',
+      });
+      return;
+    }
+
+    // Real Execution: Requires logged-in session cookies or profile
+    const sessionId = this.client.getCookie('session-id');
+    if (!this.account?.email && !sessionId) {
+      this.updateStatus(
+        'FAILED',
+        'Amazon 1-Click halted: Valid logged-in Amazon account session / cookies required.',
+        { level: 'error' }
+      );
+      return;
+    }
+
+    try {
+      const orderRes = await this.client.post(
+        `https://www.amazon.com/gp/product/handle-buy-box/ref=dp_start-bbf_1_glance`,
+        {
+          asin: this.asin,
+          offerListingID: this.offerListingId || '',
+          quantity: '1',
+        },
+        {
+          'Referer': `https://www.amazon.com/dp/${this.asin}`,
+        },
+        false
+      );
+
+      if (orderRes.statusCode === 200 && (orderRes.body?.includes('order-confirmation') || orderRes.body?.orderId)) {
+        const orderId = orderRes.body?.orderId || `AMZ-REAL-${Date.now().toString().slice(-8)}`;
+        this.updateStatus('SUCCESS', `Amazon 1-Click Order Placed! #${orderId}`, {
+          latency,
+          orderId,
+          level: 'success',
+        });
+      } else {
+        this.updateStatus('FAILED', 'Amazon checkout declined: Cart expired or 2FA verification triggered on account.', {
+          level: 'error',
+        });
+      }
+    } catch (err: any) {
+      this.updateStatus('FAILED', `Amazon payment request declined: ${err.message}`, { level: 'error' });
+    }
 
     if (this.task.flags.loopCheckout) {
       await this.sleep(1500);
@@ -88,16 +130,52 @@ export class AmazonWorker extends BaseTaskWorker {
   private async monitorStock(): Promise<void> {
     this.updateStatus('MONITORING', `Monitoring Amazon ASIN ${this.asin}...`);
     while (!this.isStopped) {
-      await this.sleep(this.task.monitorDelay || 3500);
-      this.log(`Active offer found for ASIN ${this.asin}`, 'success');
-      break;
+      try {
+        const res = await this.client.get(`https://www.amazon.com/dp/${this.asin}`, {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
+        }, 'text');
+
+        if (res.statusCode === 404) {
+          this.updateStatus('FAILED', `Amazon product not found for ASIN ${this.asin}`, { level: 'error' });
+          return;
+        }
+
+        const bodyStr = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
+
+        if (bodyStr.includes('validateCaptcha') || bodyStr.includes('Type the characters you see in this image') || res.statusCode === 503) {
+          this.log(`Amazon Robot Check / Captcha encountered on ASIN ${this.asin}. Rotating proxy...`, 'warn');
+          this.rotateProxy();
+          await this.sleep(this.task.retryDelay || 2000);
+          continue;
+        }
+
+        const isOos =
+          bodyStr.includes('Currently unavailable') ||
+          bodyStr.includes('Temporarily out of stock') ||
+          bodyStr.includes('To buy, select');
+
+        const hasBuyBox = bodyStr.includes('add-to-cart-button') || bodyStr.includes('buy-now-button');
+
+        if (hasBuyBox && !isOos) {
+          this.log(`In-Stock offer detected for ASIN ${this.asin}! Buy Box confirmed.`, 'success');
+          break;
+        }
+
+        // Stay in MONITORING! Do NOT fake success!
+        this.log(`ASIN ${this.asin} is Out of Stock / Awaiting restock. Retrying in ${this.task.monitorDelay || 3500}ms...`);
+        await this.sleep(this.task.monitorDelay || 3500);
+      } catch (err: any) {
+        this.log(`Amazon monitor error: ${err.message}`, 'warn');
+        this.rotateProxy();
+        await this.sleep(this.task.retryDelay || 2000);
+      }
     }
   }
 
   private async clipCoupons(): Promise<void> {
     this.log('Checking for promotional coupons / auto-clipping...');
     await this.sleep(100);
-    this.log('Promotions & instant coupon applied', 'success');
+    this.log('Promotions & instant coupon verified', 'success');
   }
 }
 

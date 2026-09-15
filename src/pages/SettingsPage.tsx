@@ -37,6 +37,12 @@ import {
   playRetroArcade,
   playSubThud,
   playMechanicalClick,
+  playCashRegister,
+  playSynthwaveArp,
+  playVictoryFanfare,
+  playCyberChime,
+  playSubBassDrop,
+  playMinimalPop,
   playCheckoutSound,
 } from '../utils/audio';
 
@@ -720,6 +726,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
             {[
+              { id: 'cash_register', name: 'Cash Register', desc: 'Metallic coin ring & drawer snap', play: playCashRegister },
+              { id: 'synthwave_arp', name: 'Synthwave 80s', desc: 'Neon cascading major triad', play: playSynthwaveArp },
+              { id: 'victory_fanfare', name: 'Victory Fanfare', desc: 'Triumphant brass fanfare chords', play: playVictoryFanfare },
+              { id: 'cyber_chime', name: 'Cyber Chime', desc: 'High ethereal dual crystal ping', play: playCyberChime },
+              { id: 'sub_bass_drop', name: 'Sub Bass Drop', desc: 'Deep 808 club frequency sweep', play: playSubBassDrop },
+              { id: 'minimal_pop', name: 'Minimal Pop', desc: 'Sleek organic UI bubble pop', play: playMinimalPop },
               { id: 'refract_cyan', name: 'Refract Cyan', desc: 'Crystal C6-D7 arpeggio', play: playRefractCyanChime },
               { id: 'laser_ping', name: 'Cyber Laser', desc: 'High-voltage laser ping', play: playLaserPing },
               { id: 'retro_arcade', name: '8-Bit Arcade', desc: 'Nostalgic level-up chime', play: playRetroArcade },

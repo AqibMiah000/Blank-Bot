@@ -11,6 +11,7 @@ import { MarketAnalyticsPage } from './pages/MarketAnalyticsPage';
 import { CaptchasPage } from './pages/CaptchasPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuthPage } from './pages/AuthPage';
+import { CheckoutsPage } from './pages/CheckoutsPage';
 import { firestoreService } from './firebase/firestore-service';
 import {
   TaskItem,
@@ -23,6 +24,7 @@ import {
   TwoFactorRequest,
   SystemStats,
   Retailer,
+  CheckoutRecord,
 } from './types';
 import { applyTheme } from './utils/theme';
 
@@ -33,6 +35,7 @@ export const App: React.FC = () => {
   const [profiles, setProfiles] = useState<BillingProfile[]>([]);
   const [proxyPools, setProxyPools] = useState<ProxyPool[]>([]);
   const [accounts, setAccounts] = useState<RetailAccount[]>([]);
+  const [checkouts, setCheckouts] = useState<CheckoutRecord[]>([]);
   const [settings, setSettings] = useState<AppSettings>({
     discordWebhookUrl: '',
     discordNotifyOnSuccess: true,
@@ -55,13 +58,14 @@ export const App: React.FC = () => {
   // Load initial data
   useEffect(() => {
     const loadState = async () => {
-      const [g, t, p, px, a, s] = await Promise.all([
+      const [g, t, p, px, a, s, chk] = await Promise.all([
         firestoreService.getTaskGroups(),
         firestoreService.getTasks(),
         firestoreService.getProfiles(),
         firestoreService.getProxyPools(),
         firestoreService.getAccounts(),
         firestoreService.getSettings(),
+        firestoreService.getCheckouts(),
       ]);
 
       // Filter out any previous dummy demo data so tables start completely clean
@@ -82,6 +86,7 @@ export const App: React.FC = () => {
       setTasks(t);
       setAccounts(a);
       setSettings(s);
+      setCheckouts(chk || []);
 
       const savedTheme = s.theme || (localStorage.getItem('blank_theme') as ThemeId) || 'oled';
       let savedCustom = s.customThemeColors;
@@ -124,6 +129,31 @@ export const App: React.FC = () => {
             return t;
           })
         );
+
+        if (data.status === 'SUCCESS') {
+          setTasks((currentTasks) => {
+            const task = currentTasks.find((t) => t.id === data.taskId);
+            if (task) {
+              const profile = profiles.find((p) => p.id === task.profileId);
+              const rec: CheckoutRecord = {
+                id: `chk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                orderId: data.orderId || `ORD-${Date.now().toString().slice(-6)}`,
+                retailer: task.retailer,
+                productName: `Item: ${task.input}`,
+                identifier: task.input,
+                price: 0,
+                profileName: profile?.profileName || 'Primary Profile',
+                cardMask: profile?.payment?.maskedPan || '•••• 4242',
+                latency: data.latency || 420,
+                timestamp: Date.now(),
+                status: 'COMPLETED',
+                isDryRun: task.flags?.dryRun,
+              };
+              handleAddCheckout(rec);
+            }
+            return currentTasks;
+          });
+        }
       });
 
       const unsub2FA = window.blankBotAPI.on2FARequest((req) => {
@@ -179,6 +209,21 @@ export const App: React.FC = () => {
     if (window.blankBotAPI) await window.blankBotAPI.stopTask(taskId);
     await firestoreService.deleteTask(taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  };
+
+  const handleAddCheckout = async (record: CheckoutRecord) => {
+    await firestoreService.saveCheckout(record);
+    setCheckouts((prev) => [record, ...prev.filter((c) => c.id !== record.id)]);
+  };
+
+  const handleDeleteCheckout = async (id: string) => {
+    await firestoreService.deleteCheckout(id);
+    setCheckouts((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleClearCheckouts = async () => {
+    await firestoreService.clearCheckouts();
+    setCheckouts([]);
   };
 
   const handleStartTask = (taskId: string) => {
@@ -513,6 +558,7 @@ export const App: React.FC = () => {
         currentPage={currentPage}
         onSelectPage={setCurrentPage}
         activeTasksCount={activeTasks}
+        checkoutsCount={checkouts.length}
         enableFreebiesSniper={settings.enableFreebiesSniper ?? true}
         enableMarketAnalytics={settings.enableMarketAnalytics ?? true}
       />
@@ -544,6 +590,16 @@ export const App: React.FC = () => {
               onMassStop={handleMassStop}
               onCreateGroup={handleCreateGroup}
               onDeleteGroup={handleDeleteGroup}
+            />
+          )}
+
+          {currentPage === 'checkouts' && (
+            <CheckoutsPage
+              checkouts={checkouts}
+              onAddCheckout={handleAddCheckout}
+              onDeleteCheckout={handleDeleteCheckout}
+              onClearCheckouts={handleClearCheckouts}
+              discordWebhookUrl={settings.discordWebhookUrl}
             />
           )}
 

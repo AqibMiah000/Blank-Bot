@@ -138,6 +138,10 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
 
   useEffect(() => {
     loadData(false);
+    const interval = setInterval(() => {
+      loadData(true);
+    }, 45000); // 45s live pricing ticker update
+    return () => clearInterval(interval);
   }, []);
 
   const handleToggleCategory = (cat: MarketCategory) => {
@@ -252,6 +256,12 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
             <Plus className="w-4 h-4 text-brand-400" />
             <span>Track Custom SKU</span>
           </button>
+
+          {/* Live Status Pill */}
+          <div className="h-9 px-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2 text-xs font-mono font-bold text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="hidden sm:inline">LIVE QUOTES</span>
+          </div>
 
           {/* Refresh Button */}
           <button
@@ -501,9 +511,22 @@ export const MarketAnalyticsPage: React.FC<MarketAnalyticsPageProps> = ({
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-semibold tracking-wider text-surface-400 block">
-                        Secondary Market
-                      </span>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <span className="text-[10px] uppercase font-semibold tracking-wider text-surface-400 block">
+                          Secondary Market
+                        </span>
+                        {item.change24h !== undefined && (
+                          <span
+                            className={`text-[9px] font-mono font-bold px-1 rounded ${
+                              item.change24h >= 0
+                                ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                                : 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
+                            }`}
+                          >
+                            {item.change24h >= 0 ? `+${item.change24h}%` : `${item.change24h}%`}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-sm font-bold text-white font-mono">
                         ${item.marketPrice.toFixed(2)}
                       </span>

@@ -258,6 +258,31 @@ function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('storage:save-checkouts', async (_, checkouts: any[]) => {
+    try {
+      const filePath = path.join(app.getPath('userData'), 'blank_checkouts.json');
+      fs.writeFileSync(filePath, JSON.stringify(checkouts, null, 2), 'utf-8');
+      return { success: true };
+    } catch (err: any) {
+      console.error('Failed to save checkouts to disk:', err);
+      return { success: false, message: err?.message };
+    }
+  });
+
+  ipcMain.handle('storage:get-checkouts', async () => {
+    try {
+      const filePath = path.join(app.getPath('userData'), 'blank_checkouts.json');
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        return JSON.parse(raw);
+      }
+      return [];
+    } catch (err) {
+      console.error('Failed to read checkouts from disk:', err);
+      return [];
+    }
+  });
+
   ipcMain.handle('storage:set-item', async (_, key: string, data: any) => {
     try {
       const dir = getStoreDir();

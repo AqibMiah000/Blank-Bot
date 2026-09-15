@@ -11,10 +11,12 @@ import {
   Terminal,
   Activity,
   TrendingUp,
+  ShoppingBag,
 } from 'lucide-react';
 
 export type PageId =
   | 'tasks'
+  | 'checkouts'
   | 'profiles'
   | 'proxies'
   | 'accounts'
@@ -28,6 +30,7 @@ interface SidebarProps {
   currentPage: PageId;
   onSelectPage: (page: PageId) => void;
   activeTasksCount: number;
+  checkoutsCount?: number;
   enableFreebiesSniper?: boolean;
   enableMarketAnalytics?: boolean;
 }
@@ -36,11 +39,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentPage,
   onSelectPage,
   activeTasksCount,
+  checkoutsCount,
   enableFreebiesSniper = true,
   enableMarketAnalytics = true,
 }) => {
   const navItems = [
     { id: 'tasks' as PageId, label: 'Tasks', icon: Layers, badge: activeTasksCount || undefined },
+    { id: 'checkouts' as PageId, label: 'Checkouts', icon: ShoppingBag, badge: checkoutsCount || undefined },
     { id: 'profiles' as PageId, label: 'Profiles', icon: CreditCard },
     { id: 'proxies' as PageId, label: 'Proxies', icon: Server },
     { id: 'accounts' as PageId, label: 'Accounts', icon: UserCheck },

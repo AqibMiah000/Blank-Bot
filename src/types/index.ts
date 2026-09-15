@@ -22,6 +22,7 @@ export interface TaskFlags {
   skipMonitor: boolean;
   loopCheckout: boolean;
   autoStartOnRestart: boolean;
+  dryRun?: boolean;
 }
 
 export interface TaskItem {
@@ -189,7 +190,29 @@ export type SoundPackId =
   | 'retro_arcade'
   | 'sub_thud'
   | 'mechanical_click'
+  | 'cash_register'
+  | 'synthwave_arp'
+  | 'victory_fanfare'
+  | 'cyber_chime'
+  | 'sub_bass_drop'
+  | 'minimal_pop'
   | 'mute';
+
+export interface CheckoutRecord {
+  id: string;
+  orderId: string;
+  retailer: Retailer;
+  productName: string;
+  identifier: string; // SKU or ASIN
+  price: number | string;
+  profileName: string;
+  cardMask?: string;
+  accountEmail?: string;
+  latency: number;
+  timestamp: number;
+  status: 'COMPLETED' | 'CANCELLED' | 'PENDING_SHIPMENT';
+  isDryRun?: boolean;
+}
 
 export interface CaptchaHarvesterSlot {
   id: string;
@@ -216,6 +239,8 @@ export interface MarketItem {
   lastUpdated: number;
   notes?: string;
   isCustom?: boolean;
+  change24h?: number;
+  trend?: 'up' | 'down' | 'flat';
 }
 
 export interface AppSettings {

@@ -112,6 +112,144 @@ export function playMechanicalClick() {
   osc.stop(now + 0.05);
 }
 
+/** 6. Cash Register: Coin ring followed by mechanical drawer snap ("Cha-Ching") */
+export function playCashRegister() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // High metallic coin harmonics
+  [1975.53, 2489.02, 3135.96].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + i * 0.04);
+    gain.gain.setValueAtTime(0.2, now + i * 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.04 + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + i * 0.04);
+    osc.stop(now + i * 0.04 + 0.35);
+  });
+
+  // Mechanical register snap / clunk
+  const snapOsc = ctx.createOscillator();
+  const snapGain = ctx.createGain();
+  snapOsc.type = 'square';
+  snapOsc.frequency.setValueAtTime(380, now + 0.14);
+  snapOsc.frequency.exponentialRampToValueAtTime(80, now + 0.24);
+  snapGain.gain.setValueAtTime(0.25, now + 0.14);
+  snapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+  snapOsc.connect(snapGain);
+  snapGain.connect(ctx.destination);
+  snapOsc.start(now + 0.14);
+  snapOsc.stop(now + 0.28);
+}
+
+/** 7. Synthwave Arp: 80s Neon Cascading Major Triad */
+export function playSynthwaveArp() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51]; // A major arpeggio
+  notes.forEach((freq, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+    gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + idx * 0.05);
+    osc.stop(now + idx * 0.05 + 0.25);
+  });
+}
+
+/** 8. Victory Fanfare: Triumphant brass sequence */
+export function playVictoryFanfare() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const chords = [
+    { freq: 523.25, delay: 0.00, dur: 0.10 }, // C5
+    { freq: 659.25, delay: 0.10, dur: 0.10 }, // E5
+    { freq: 783.99, delay: 0.20, dur: 0.10 }, // G5
+    { freq: 1046.50, delay: 0.30, dur: 0.45 }, // C6 grand sustain
+  ];
+  chords.forEach(({ freq, delay, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + delay);
+    gain.gain.setValueAtTime(0.24, now + delay);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + delay);
+    osc.stop(now + delay + dur);
+  });
+}
+
+/** 9. Cyber Chime: High ethereal dual crystal ping */
+export function playCyberChime() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const pings = [
+    { freq: 1567.98, delay: 0.00, dur: 0.28 }, // G6
+    { freq: 2093.00, delay: 0.08, dur: 0.45 }, // C7
+  ];
+  pings.forEach(({ freq, delay, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now + delay);
+    gain.gain.setValueAtTime(0.28, now + delay);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + delay);
+    osc.stop(now + delay + dur);
+  });
+}
+
+/** 10. Sub Bass Drop: Deep 808 club frequency sweep */
+export function playSubBassDrop() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(160, now);
+  osc.frequency.exponentialRampToValueAtTime(32, now + 0.45);
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.5);
+}
+
+/** 11. Minimal Pop: Clean, crisp UI bubble pop */
+export function playMinimalPop() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(450, now);
+  osc.frequency.exponentialRampToValueAtTime(950, now + 0.04);
+  gain.gain.setValueAtTime(0.25, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.06);
+}
+
 /** Master Sound Pack Player */
 export function playCheckoutSound(pack: SoundPackId = 'refract_cyan') {
   if (pack === 'mute') return;
@@ -124,6 +262,18 @@ export function playCheckoutSound(pack: SoundPackId = 'refract_cyan') {
       return playSubThud();
     case 'mechanical_click':
       return playMechanicalClick();
+    case 'cash_register':
+      return playCashRegister();
+    case 'synthwave_arp':
+      return playSynthwaveArp();
+    case 'victory_fanfare':
+      return playVictoryFanfare();
+    case 'cyber_chime':
+      return playCyberChime();
+    case 'sub_bass_drop':
+      return playSubBassDrop();
+    case 'minimal_pop':
+      return playMinimalPop();
     case 'refract_cyan':
     default:
       return playRefractCyanChime();

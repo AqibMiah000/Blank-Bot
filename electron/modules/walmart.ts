@@ -75,17 +75,48 @@ export class WalmartWorker extends BaseTaskWorker {
     if (this.isStopped) return;
 
     // 5. Submit Order
-    this.updateStatus('CHECKING_OUT', 'Submitting order settlement to Walmart...');
-    await this.sleep(300);
-
     const latency = Date.now() - startCheckoutTime;
-    const orderId = `WMT-${Math.floor(10000000 + Math.random() * 90000000)}`;
 
-    this.updateStatus('SUCCESS', `Walmart Order Placed! #${orderId}`, {
-      latency,
-      orderId,
-      level: 'success',
-    });
+    if (this.task.flags.dryRun) {
+      const orderId = `DRY-RUN-WMT-${Math.floor(10000000 + Math.random() * 90000000)}`;
+      this.updateStatus('SUCCESS', `[DRY-RUN] Walmart Simulation Complete! #${orderId}`, {
+        latency,
+        orderId,
+        level: 'info',
+      });
+      return;
+    }
+
+    if (!this.profile || !this.profile.payment || !this.profile.payment.maskedPan) {
+      this.updateStatus('FAILED', 'Walmart checkout halted: Missing valid billing payment profile.', {
+        level: 'error',
+      });
+      return;
+    }
+
+    this.updateStatus('CHECKING_OUT', 'Submitting order settlement to Walmart gateway...');
+    try {
+      const checkoutRes = await this.client.post('https://www.walmart.com/api/checkout/v3/contract', {
+        itemId: this.itemId,
+        offerId: this.offerId || '',
+      });
+
+      if (checkoutRes.statusCode === 200 && checkoutRes.body?.orderId) {
+        this.updateStatus('SUCCESS', `Walmart Order Placed! #${checkoutRes.body.orderId}`, {
+          latency,
+          orderId: checkoutRes.body.orderId,
+          level: 'success',
+        });
+      } else {
+        this.updateStatus(
+          'FAILED',
+          `Walmart transaction declined: ${checkoutRes.body?.message || 'Payment method verification required'}`,
+          { level: 'error' }
+        );
+      }
+    } catch (err: any) {
+      this.updateStatus('FAILED', `Walmart payment failed: ${err.message}`, { level: 'error' });
+    }
 
     if (this.task.flags.loopCheckout) {
       this.log('Loop Checkout active: immediately re-queuing Walmart task');
@@ -96,10 +127,45 @@ export class WalmartWorker extends BaseTaskWorker {
   private async monitorInventory(): Promise<void> {
     this.updateStatus('MONITORING', `Polling Walmart Item ${this.itemId}...`);
     while (!this.isStopped) {
-      // Simulate stock poll
-      await this.sleep(this.task.monitorDelay || 3500);
-      this.log(`Stock identified for Item ${this.itemId}`, 'success');
-      break;
+      try {
+        const res = await this.client.get(
+          `https://www.walmart.com/ip/${this.itemId}`,
+          {
+            'Accept': 'text/html,application/xhtml+xml',
+          },
+          'text'
+        );
+
+        const bodyStr = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
+
+        if (res.statusCode === 412 || bodyStr.includes('blocked') || bodyStr.includes('PerimeterX')) {
+          this.log(`PerimeterX shield encountered on Item ${this.itemId}. Solving...`, 'warn');
+          await this.resolvePerimeterX();
+          await this.sleep(this.task.retryDelay || 2000);
+          continue;
+        }
+
+        const isOos =
+          bodyStr.includes('Out of stock') ||
+          bodyStr.includes('unavailable') ||
+          res.statusCode === 404;
+
+        const inStock = bodyStr.includes('Add to cart') && !isOos;
+
+        if (inStock) {
+          this.log(`Stock confirmed for Walmart Item ${this.itemId}!`, 'success');
+          break;
+        }
+
+        this.log(
+          `Walmart Item ${this.itemId} is Out of Stock. Polling again in ${this.task.monitorDelay || 3500}ms...`
+        );
+        await this.sleep(this.task.monitorDelay || 3500);
+      } catch (err: any) {
+        this.log(`Walmart monitor error: ${err.message}`, 'warn');
+        this.rotateProxy();
+        await this.sleep(this.task.retryDelay || 2000);
+      }
     }
   }
 
@@ -112,7 +178,7 @@ export class WalmartWorker extends BaseTaskWorker {
       this.client.setCookie('_px3', pxCookie);
       this.log('PerimeterX gate cleared in 180ms', 'success');
     } catch (err: any) {
-      this.log(`PX simulation warning: ${err.message}`, 'warn');
+      this.log(`PX token status: ${err.message}`, 'warn');
     }
   }
 

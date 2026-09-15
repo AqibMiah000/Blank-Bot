@@ -1,6 +1,6 @@
 {
   "name": "blank",
-  "version": "1.20.0",
+  "version": "1.30.0",
   "description": "Next-Generation High-Frequency Desktop Retail Automation Suite",
   "main": "dist-electron/main.js",
   "type": "module",
