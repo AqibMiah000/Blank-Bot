@@ -120,42 +120,6 @@ const ZIP_LOOKUP: Record<string, { city: string; state: string }> = {
 
 const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
   {
-    id: 'rst_seed_local_1',
-    productName: 'Pokémon TCG: Destined Rivals Booster Bundle (6 Packs)',
-    setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
-    retailer: 'target',
-    identifier: '90184421',
-    price: 26.94,
-    marketPrice: 48.00,
-    productUrl: 'https://www.target.com/s?searchTerm=pokemon+booster+bundle',
-    timestamp: Date.now() - 1000 * 60 * 1, // 1 min ago
-    status: 'IN_STOCK',
-    fulfillmentType: 'STORE_PICKUP',
-    storeName: 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)',
-    storeAddress: '40-24 College Point Blvd, Flushing, NY 11354',
-    distanceMiles: 0.8,
-    availableQuantity: 6,
-    isDirectDrop: true,
-  },
-  {
-    id: 'rst_seed_local_2',
-    productName: 'Pokémon TCG: Journey Together Elite Trainer Box',
-    setOrSeries: 'Scarlet & Violet: Journey Together (SV09)',
-    retailer: 'walmart',
-    identifier: '548910283',
-    price: 54.98,
-    marketPrice: 85.00,
-    productUrl: 'https://www.walmart.com/search?q=pokemon+elite+trainer+box',
-    timestamp: Date.now() - 1000 * 60 * 4, // 4 mins ago
-    status: 'IN_STOCK',
-    fulfillmentType: 'STORE_PICKUP',
-    storeName: 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)',
-    storeAddress: '77 Green Acres Rd S, Valley Stream, NY 11581',
-    distanceMiles: 8.9,
-    availableQuantity: 4,
-    isDirectDrop: true,
-  },
-  {
     id: 'rst_seed_1',
     productName: 'Pokémon TCG: Mega Evolution Chaos Rising Booster Box',
     setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
@@ -295,17 +259,19 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   const [restockFeed, setRestockFeed] = useState<TcgRestockEvent[]>(() => {
     try {
       const saved = localStorage.getItem('blank_tcg_restock_feed');
-      const parsed = saved ? JSON.parse(saved) : SEED_RESTOCK_EVENTS;
-      return parsed.map((e: TcgRestockEvent) => {
-        if (e.storeName && e.storeName.includes('Metro District')) {
-          const cleanAddr = e.storeAddress || '40-24 College Point Blvd, Flushing, NY 11354';
-          return {
-            ...e,
-            storeName: e.storeName.replace('Metro District', cleanAddr),
-          };
-        }
-        return e;
-      });
+      const parsed: TcgRestockEvent[] = saved ? JSON.parse(saved) : SEED_RESTOCK_EVENTS;
+      return parsed
+        .filter((e) => !e.id.startsWith('rst_seed_local_') && !e.id.startsWith('rst_loc_click_'))
+        .map((e) => {
+          if (e.storeName && e.storeName.includes('Metro District')) {
+            const cleanAddr = e.storeAddress || '40-24 College Point Blvd, Flushing, NY 11354';
+            return {
+              ...e,
+              storeName: e.storeName.replace('Metro District', cleanAddr),
+            };
+          }
+          return e;
+        });
     } catch {
       return SEED_RESTOCK_EVENTS;
     }
@@ -433,106 +399,31 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         );
       }
 
-      if (!results || results.length === 0) {
-        const cleanZip = zipCode.trim() || '11354';
-        const storeNum = (parseInt(cleanZip, 10) % 899) + 100;
-        const currentCity = city.trim() || 'Flushing';
-        const currentState = selectedState.trim() || 'NY';
+      if (results && results.length > 0) {
+        setRestockFeed((prev) => [
+          ...results,
+          ...prev.filter(
+            (p) => !results.some((r) => r.identifier === p.identifier && r.storeName === p.storeName)
+          ),
+        ]);
 
-        let targetAddr = '40-24 College Point Blvd, Flushing, NY 11354';
-        let targetStore = 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)';
-        let targetDist = 0.8;
-        let walmartAddr = '77 Green Acres Rd S, Valley Stream, NY 11581';
-        let walmartStore = 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)';
-        let walmartDist = 8.9;
-
-        if (cleanZip === '11354' || currentCity.toLowerCase() === 'flushing') {
-          targetAddr = '40-24 College Point Blvd, Flushing, NY 11354';
-          targetStore = 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)';
-          targetDist = 0.8;
-          walmartAddr = '77 Green Acres Rd S, Valley Stream, NY 11581';
-          walmartStore = 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)';
-          walmartDist = 8.9;
-        } else if (cleanZip.startsWith('900') || cleanZip.startsWith('902') || currentCity.toLowerCase() === 'beverly hills' || currentCity.toLowerCase() === 'los angeles') {
-          targetAddr = '7150 Beverly Blvd, Los Angeles, CA 90036';
-          targetStore = 'Target - 7150 Beverly Blvd, Los Angeles, CA 90036 (#3991)';
-          targetDist = 2.6;
-          walmartAddr = '19503 Normandie Ave, Torrance, CA 90501';
-          walmartStore = 'Walmart Supercenter - 19503 Normandie Ave, Torrance, CA 90501 (#2280)';
-          walmartDist = 8.2;
-        } else if (cleanZip.startsWith('100') || currentCity.toLowerCase() === 'new york' || currentCity.toLowerCase() === 'manhattan') {
-          targetAddr = '112 W 34th St, New York, NY 10120';
-          targetStore = 'Target - 112 W 34th St, New York, NY 10120 (#3213)';
-          targetDist = 1.2;
-          walmartAddr = '400 Park Pl, Secaucus, NJ 07094';
-          walmartStore = 'Walmart Supercenter - 400 Park Pl, Secaucus, NJ 07094 (#3291)';
-          walmartDist = 5.4;
-        } else {
-          targetAddr = `${((storeNum * 19) % 700) + 100} Commercial Plaza, ${currentCity}, ${currentState} ${cleanZip}`;
-          targetStore = `Target - ${targetAddr} (#${storeNum})`;
-          targetDist = Math.min(searchRadius * 0.35, 2.7);
-          walmartAddr = `${((storeNum * 23) % 700) + 120} Retail Center Dr, ${currentCity}, ${currentState} ${cleanZip}`;
-          walmartStore = `Walmart Supercenter - ${walmartAddr} (#${storeNum + 15})`;
-          walmartDist = Math.min(searchRadius * 0.65, 5.2);
+        if (soundEnabled) {
+          playRefractCyanChime();
         }
 
-        results = [
-          {
-            id: `rst_loc_click_${Date.now()}_1`,
-            productName: 'Pokémon TCG: Destined Rivals Booster Bundle (6 Packs)',
-            setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
-            retailer: 'target',
-            identifier: '90184421',
-            price: 26.94,
-            marketPrice: 48.00,
-            productUrl: 'https://www.target.com/s?searchTerm=pokemon+booster+bundle',
-            timestamp: Date.now(),
-            status: 'IN_STOCK',
-            fulfillmentType: 'STORE_PICKUP',
-            storeName: targetStore,
-            storeAddress: targetAddr,
-            distanceMiles: targetDist,
-            availableQuantity: 6,
-            isDirectDrop: true,
-          },
-          {
-            id: `rst_loc_click_${Date.now()}_2`,
-            productName: 'Pokémon TCG: Journey Together Elite Trainer Box',
-            setOrSeries: 'Scarlet & Violet: Journey Together (SV09)',
-            retailer: 'walmart',
-            identifier: '548910283',
-            price: 54.98,
-            marketPrice: 85.00,
-            productUrl: 'https://www.walmart.com/search?q=pokemon+elite+trainer+box',
-            timestamp: Date.now(),
-            status: 'IN_STOCK',
-            fulfillmentType: 'STORE_PICKUP',
-            storeName: walmartStore,
-            storeAddress: walmartAddr,
-            distanceMiles: walmartDist,
-            availableQuantity: 4,
-            isDirectDrop: true,
-          },
-        ];
+        setLocalScanMessage(
+          `✓ Found ${results.length} verified in-store restocks in ${city || 'Flushing'}, ${selectedState}!`
+        );
+      } else {
+        setLocalScanMessage(
+          `Queried Target & Walmart branches within ${searchRadius} mi of ${city || 'Flushing'}, ${selectedState} (${zipCode}). 0 verified units currently on physical shelves (Out of Stock).`
+        );
       }
-
-      setRestockFeed((prev) => [
-        ...results,
-        ...prev.filter(
-          (p) => !results.some((r) => r.identifier === p.identifier && r.storeName === p.storeName)
-        ),
-      ]);
-
-      if (soundEnabled) {
-        playRefractCyanChime();
-      }
-
-      setLocalScanMessage(`✓ Found ${results.length} local branches with active shelf stock in ${city || 'Flushing'}, ${selectedState} (${zipCode})!`);
     } catch (err: any) {
-      setLocalScanMessage(`Scan error: ${err.message}`);
+      setLocalScanMessage(`Scan check error: ${err.message}`);
     } finally {
       setIsScanningLocal(false);
-      setTimeout(() => setLocalScanMessage(null), 5000);
+      setTimeout(() => setLocalScanMessage(null), 6000);
     }
   };
 

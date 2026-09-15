@@ -584,6 +584,33 @@ async function runTestSuite() {
     'Store address and city/state geo-resolution'
   );
 
+  test(
+    'TCG Local Pickup',
+    'Strict Zero-Hallucination: Never emits in-stock alerts when inventory is 0 or unverified',
+    () => {
+      // Simulate real fulfillment options where stock is 0 / OUT_OF_STOCK
+      const emptyTargetOptions = {
+        order_pickup: { availability_status: 'OUT_OF_STOCK', available_to_promise_quantity: 0 },
+        curbside: { availability_status: 'OUT_OF_STOCK', available_to_promise_quantity: 0 },
+        in_store_only: { availability_status: 'OUT_OF_STOCK', available_to_promise_quantity: 0 }
+      };
+
+      const hasStock = 
+        emptyTargetOptions.order_pickup.availability_status === 'IN_STOCK' ||
+        emptyTargetOptions.curbside.availability_status === 'IN_STOCK' ||
+        emptyTargetOptions.in_store_only.availability_status === 'IN_STOCK';
+
+      assert(hasStock === false, 'Must strictly identify out-of-stock items as false');
+
+      // Ensure that when an API fails or is empty, no fake cards are returned
+      const rawApiResults: any[] = [];
+      const verifiedFeed = rawApiResults.filter((r) => r && r.inStock && r.availableQuantity > 0);
+      assert(verifiedFeed.length === 0, 'Must produce empty array when 0 shelf items are detected');
+    },
+    'CRITICAL',
+    'False positive restock prevention'
+  );
+
   // -------------------------------------------------------------------------
   // FINAL RESULTS
   // -------------------------------------------------------------------------

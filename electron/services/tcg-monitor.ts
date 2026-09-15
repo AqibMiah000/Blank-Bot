@@ -545,34 +545,25 @@ export class TcgDropMonitor extends EventEmitter {
             if (data?.stores && data.stores.length > 0) {
               const matchedStore = data.stores[0];
               const dist = parseFloat(matchedStore.distance) || store.distanceMiles;
-              if (dist <= radiusMiles) {
+              const storeQty = parseInt(matchedStore.inventoryCount || matchedStore.quantity || '0', 10);
+              if (dist <= radiusMiles && storeQty > 0) {
                 const street = matchedStore.streetAddress || store.storeAddress;
                 return {
                   storeName: `Walmart Supercenter - ${street} (#${matchedStore.id || store.storeId})`,
                   storeAddress: street,
                   distanceMiles: dist,
-                  availableQuantity: 4,
+                  availableQuantity: storeQty,
                   inStock: true,
                   fulfillmentType: 'STORE_PICKUP',
                 };
               }
             }
           } catch {
-            // Fallthrough to standard check
+            // Error or network timeout querying Walmart
           }
         }
       }
-      if (stores && stores.length > 0) {
-        const store = stores[0];
-        return {
-          storeName: store.storeName,
-          storeAddress: store.storeAddress,
-          distanceMiles: store.distanceMiles,
-          availableQuantity: target.retailer === 'target' ? 6 : 4,
-          inStock: true,
-          fulfillmentType: 'STORE_PICKUP',
-        };
-      }
+      // Zero verified shelf inventory detected across stores
       return null;
     } catch {
       return null;

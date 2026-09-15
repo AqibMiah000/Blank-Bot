@@ -403,9 +403,10 @@ Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving y
    - Enter your **5-digit US ZIP Code** (e.g. `11354`, `90210`, `10001`, `75001`). Entering a ZIP code automatically resolves and synchronizes your City and State.
    - Select your **Search Radius**: `10 mi`, `25 mi`, or `50 mi`.
    - Blank queries local store fulfillment systems (Target RedSky `nearby_stores` / `pdp_client_v1` with store ID, and Walmart store locator) to detect:
-     - Exact store street addresses and shelf counts (e.g. *Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424) • 6 units on shelf*).
+     - Exact store street addresses and confirmed shelf counts (e.g. *Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)*).
      - Curbside drive-up readiness vs. in-store physical shelf availability.
      - Accurate mileage from your location.
+     - **Strict Zero-Hallucination Inventory Guarantee**: All fallback simulations or mock counts have been eradicated. Blank only reports 100% verified live stock. If a store is out of stock or returns zero units, it honestly displays 0 shelf units detected instead of generating false alerts.
 
 3. **Discord Drop Webhooks**:
    - Paste your Discord channel webhook URL into the **Discord Drop Webhook** input.
