@@ -15,6 +15,9 @@ import {
   Sparkles,
   ShoppingBag,
   TrendingUp,
+  MapPin,
+  Store,
+  Navigation,
 } from 'lucide-react';
 import {
   TcgRestockEvent,
@@ -38,6 +41,42 @@ interface TcgRadarPageProps {
 
 const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
   {
+    id: 'rst_seed_local_1',
+    productName: 'Pokémon TCG: Destined Rivals Booster Bundle (6 Packs)',
+    setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
+    retailer: 'target',
+    identifier: '90184421',
+    price: 26.94,
+    marketPrice: 48.00,
+    productUrl: 'https://www.target.com/s?searchTerm=pokemon+booster+bundle',
+    timestamp: Date.now() - 1000 * 60 * 1, // 1 min ago
+    status: 'IN_STOCK',
+    fulfillmentType: 'STORE_PICKUP',
+    storeName: 'Target - Beverly Hills / West LA (#3991)',
+    storeAddress: 'West 3rd St, Los Angeles, CA',
+    distanceMiles: 2.8,
+    availableQuantity: 6,
+    isDirectDrop: true,
+  },
+  {
+    id: 'rst_seed_local_2',
+    productName: 'Pokémon TCG: Journey Together Elite Trainer Box',
+    setOrSeries: 'Scarlet & Violet: Journey Together (SV09)',
+    retailer: 'walmart',
+    identifier: '548910283',
+    price: 54.98,
+    marketPrice: 85.00,
+    productUrl: 'https://www.walmart.com/search?q=pokemon+elite+trainer+box',
+    timestamp: Date.now() - 1000 * 60 * 4, // 4 mins ago
+    status: 'IN_STOCK',
+    fulfillmentType: 'STORE_PICKUP',
+    storeName: 'Walmart Supercenter #2280 - Metro West',
+    storeAddress: 'Hawthorne Blvd, Torrance, CA',
+    distanceMiles: 6.4,
+    availableQuantity: 4,
+    isDirectDrop: true,
+  },
+  {
     id: 'rst_seed_1',
     productName: 'Pokémon TCG: Mega Evolution Chaos Rising Booster Box',
     setOrSeries: 'Mega Evolution: Chaos Rising (ME04)',
@@ -46,11 +85,12 @@ const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
     price: 161.64,
     marketPrice: 289.00,
     productUrl: 'https://www.bestbuy.com/site/searchpage.jsp?st=pokemon+trading+card+game',
-    timestamp: Date.now() - 1000 * 60 * 3, // 3 mins ago
+    timestamp: Date.now() - 1000 * 60 * 8,
     status: 'IN_STOCK',
     isDirectDrop: true,
     isLeakOrEarlyDrop: true,
     projectedDropWindow: 'Thursdays 10:00 AM - 11:30 AM EST (Restock Wave)',
+    fulfillmentType: 'SHIPPING',
   },
   {
     id: 'rst_seed_2',
@@ -61,10 +101,11 @@ const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
     price: 28.99,
     marketPrice: 49.00,
     productUrl: 'https://www.bestbuy.com/site/pokemon-pokemon-tcg-scarlet-violet-3-5-151-booster-bundle/6548485.p?skuId=6548485',
-    timestamp: Date.now() - 1000 * 60 * 7,
+    timestamp: Date.now() - 1000 * 60 * 12,
     status: 'IN_STOCK',
     isDirectDrop: true,
     projectedDropWindow: 'High-Velocity Restock Spike',
+    fulfillmentType: 'SHIPPING',
   },
   {
     id: 'rst_seed_3',
@@ -75,11 +116,12 @@ const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
     price: 26.94,
     marketPrice: 62.00,
     productUrl: 'https://www.amazon.com/dp/B0DHQ6Z9PQ',
-    timestamp: Date.now() - 1000 * 60 * 14,
+    timestamp: Date.now() - 1000 * 60 * 18,
     status: 'IN_STOCK',
     isDirectDrop: true,
     isLeakOrEarlyDrop: true,
     projectedDropWindow: 'Amazon Flash Restock Waves (Unscheduled Lightning Drops)',
+    fulfillmentType: 'SHIPPING',
   },
   {
     id: 'rst_seed_4',
@@ -90,25 +132,12 @@ const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
     price: 107.76,
     marketPrice: 195.00,
     productUrl: 'https://www.amazon.com/s?k=one+piece+card+game+booster+box',
-    timestamp: Date.now() - 1000 * 60 * 22,
+    timestamp: Date.now() - 1000 * 60 * 25,
     status: 'IN_STOCK',
     isDirectDrop: true,
     isLeakOrEarlyDrop: true,
     projectedDropWindow: 'Direct Bandai Allocation Restock',
-  },
-  {
-    id: 'rst_seed_5',
-    productName: 'Pokémon TCG: Destined Rivals Booster Bundle (6 Packs)',
-    setOrSeries: 'Scarlet & Violet: Destined Rivals (SV10)',
-    retailer: 'target',
-    identifier: '90184421',
-    price: 26.94,
-    marketPrice: 48.00,
-    productUrl: 'https://www.target.com/s?searchTerm=pokemon+booster+bundle',
-    timestamp: Date.now() - 1000 * 60 * 35,
-    status: 'IN_STOCK',
-    isLeakOrEarlyDrop: true,
-    projectedDropWindow: 'Target RedSky Inventory Pulsing: 6:00 AM - 8:00 AM EST',
+    fulfillmentType: 'SHIPPING',
   },
 ];
 
@@ -131,6 +160,25 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
     'amazon',
   ]);
 
+  // Local Store Pickup Radar Configuration
+  const [enableLocalPickup, setEnableLocalPickup] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_enable_local_pickup');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [zipCode, setZipCode] = useState<string>(() => {
+    return localStorage.getItem('blank_tcg_zip_code') || '90210';
+  });
+
+  const [searchRadius, setSearchRadius] = useState<number>(() => {
+    const saved = localStorage.getItem('blank_tcg_search_radius');
+    return saved ? parseInt(saved, 10) : 25;
+  });
+
   const [restockFeed, setRestockFeed] = useState<TcgRestockEvent[]>(() => {
     try {
       const saved = localStorage.getItem('blank_tcg_restock_feed');
@@ -143,12 +191,15 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
 
-  // Sync feed to local storage
+  // Sync feed and local pickup settings to local storage
   useEffect(() => {
     try {
       localStorage.setItem('blank_tcg_restock_feed', JSON.stringify(restockFeed.slice(0, 50)));
+      localStorage.setItem('blank_tcg_enable_local_pickup', JSON.stringify(enableLocalPickup));
+      localStorage.setItem('blank_tcg_zip_code', zipCode);
+      localStorage.setItem('blank_tcg_search_radius', String(searchRadius));
     } catch {}
-  }, [restockFeed]);
+  }, [restockFeed, enableLocalPickup, zipCode, searchRadius]);
 
   // Initial check on mount
   useEffect(() => {
@@ -192,6 +243,9 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         autoSnipe,
         profileId: profiles[0]?.id,
         proxyPoolId: proxyPools[0]?.id,
+        enableLocalPickup,
+        zipCode: zipCode.trim(),
+        searchRadiusMiles: searchRadius,
       };
 
       if (window.blankBotAPI?.startTcgMonitor) {
@@ -439,6 +493,87 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
               />
             </div>
           </div>
+
+          {/* Local Store In-Store & Curbside Pickup Radar */}
+          <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Store className="w-3.5 h-3.5 text-emerald-400" />
+                Local Shelf &amp; Pickup Radar
+              </span>
+              <span className="text-[10px] text-emerald-400 font-mono font-semibold">Target &amp; Walmart</span>
+            </div>
+
+            {/* Toggle Enable Local Pickup */}
+            <label className="flex items-center justify-between p-2.5 rounded-xl bg-surface-950 border border-surface-800 cursor-pointer">
+              <div className="text-xs">
+                <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  Scan In-Store / Curbside
+                </span>
+                <span className="text-[10px] text-surface-400 block mt-0.5">
+                  Detect shelf stock &amp; order pickup at nearby branches
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={enableLocalPickup}
+                onChange={(e) => setEnableLocalPickup(e.target.checked)}
+                className="w-4 h-4 rounded text-emerald-500 bg-surface-900 border-surface-700"
+              />
+            </label>
+
+            {enableLocalPickup && (
+              <>
+                {/* ZIP Code Input */}
+                <div>
+                  <label className="text-[11px] font-semibold text-surface-300 uppercase block mb-1">
+                    Your ZIP Code
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      maxLength={5}
+                      value={zipCode}
+                      onChange={(e) => setZipCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 90210, 10001"
+                      className="w-full bg-surface-950 border border-surface-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-surface-600 font-mono outline-none focus:border-emerald-500"
+                    />
+                    <MapPin className="w-3.5 h-3.5 text-surface-500 absolute left-2.5 top-2" />
+                  </div>
+                </div>
+
+                {/* Search Radius Selector */}
+                <div>
+                  <div className="flex items-center justify-between text-[11px] mb-1.5">
+                    <span className="font-semibold text-surface-300 uppercase">Search Radius</span>
+                    <span className="font-mono text-emerald-400 font-bold">{searchRadius} Miles</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[10, 25, 50].map((radius) => (
+                      <button
+                        key={radius}
+                        type="button"
+                        onClick={() => setSearchRadius(radius)}
+                        className={`py-1.5 rounded-lg text-xs font-semibold font-mono transition-all ${
+                          searchRadius === radius
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-surface-950 text-surface-400 border border-surface-800 hover:text-white'
+                        }`}
+                      >
+                        {radius} mi
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-surface-950/70 border border-surface-800 text-[10px] text-surface-400 font-mono flex items-center gap-1.5">
+                  <Navigation className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>Target RedSky &amp; Walmart branches within {searchRadius} mi active.</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Right Live Restock Stream */}
@@ -477,6 +612,9 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                   ? event.marketPrice - event.price
                   : 0;
 
+                const isLocalPickup =
+                  event.fulfillmentType === 'STORE_PICKUP' || event.fulfillmentType === 'IN_STORE_ONLY';
+
                 return (
                   <div
                     key={event.id}
@@ -488,7 +626,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                       </div>
 
                       <div className="min-w-0">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase font-mono ${
                               event.retailer === 'bestbuy'
@@ -502,10 +640,19 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                           >
                             {event.retailer}
                           </span>
+
+                          {isLocalPickup && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-emerald-300" />
+                              In-Store Pickup ({event.distanceMiles ? `${event.distanceMiles.toFixed(1)} mi` : 'Nearby'})
+                            </span>
+                          )}
+
                           <span className="text-[11px] text-surface-400 flex items-center gap-1 font-mono">
                             <Clock className="w-3 h-3" />
                             {formatTimeAgo(event.timestamp)}
                           </span>
+
                           {event.isLeakOrEarlyDrop && (
                             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1">
                               <Sparkles className="w-3 h-3 text-purple-300" />
@@ -518,7 +665,17 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                           {event.productName}
                         </h4>
 
-                        {event.projectedDropWindow && (
+                        {event.storeName && (
+                          <div className="text-[11px] font-mono text-emerald-300 mt-0.5 flex items-center gap-1">
+                            <Store className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span className="truncate">
+                              {event.storeName}
+                              {event.availableQuantity ? ` • ${event.availableQuantity} on shelf` : ''}
+                            </span>
+                          </div>
+                        )}
+
+                        {event.projectedDropWindow && !event.storeName && (
                           <div className="text-[11px] font-mono text-purple-300 mt-0.5 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>Projected Pattern: {event.projectedDropWindow}</span>
@@ -550,7 +707,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                         title="Open product page in browser"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        <span>Store Page</span>
+                        <span>{isLocalPickup ? 'Store Page' : 'Store Page'}</span>
                       </button>
 
                       <button

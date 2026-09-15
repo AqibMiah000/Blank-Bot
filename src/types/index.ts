@@ -171,6 +171,12 @@ export interface TcgRestockEvent {
   isLeakOrEarlyDrop?: boolean;
   projectedDropWindow?: string;
   releaseDate?: string;
+  // Local store pickup & shelf restock radius monitoring
+  fulfillmentType?: 'SHIPPING' | 'STORE_PICKUP' | 'IN_STORE_ONLY';
+  storeName?: string;
+  storeAddress?: string;
+  distanceMiles?: number;
+  availableQuantity?: number;
 }
 
 export interface TcgMonitorConfig {
@@ -183,6 +189,10 @@ export interface TcgMonitorConfig {
   autoSnipe: boolean;
   profileId?: string;
   proxyPoolId?: string;
+  // Local Store Pickup Radar
+  enableLocalPickup?: boolean;
+  zipCode?: string;
+  searchRadiusMiles?: number;
 }
 
 export interface SolverKeys {

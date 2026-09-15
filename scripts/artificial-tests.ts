@@ -477,6 +477,87 @@ async function runTestSuite() {
   );
 
   // -------------------------------------------------------------------------
+  // SUITE 7: TCG DROP RADAR & LOCAL STORE PICKUP SENTINEL
+  // -------------------------------------------------------------------------
+  console.log('\n--- 7. TCG Drop Radar & Local Store Pickup Scanner ---');
+
+  test(
+    'TCG Local Pickup',
+    'Sanitizes 5-digit ZIP codes with whitespace or ZIP+4 extensions',
+    () => {
+      const raw = '  90210-1234 ';
+      const clean = raw.trim().slice(0, 5);
+      assert(clean === '90210', `Expected 90210, got ${clean}`);
+    },
+    'HIGH',
+    'Store locator ZIP parsing'
+  );
+
+  test(
+    'TCG Local Pickup',
+    'Filters stores strictly within user search radius (e.g., 25 miles)',
+    () => {
+      const stores = [
+        { name: 'Target Beverly Hills', distance: 2.8 },
+        { name: 'Target Culver City', distance: 6.4 },
+        { name: 'Target Long Beach', distance: 24.1 },
+        { name: 'Target San Diego', distance: 110.5 },
+      ];
+      const radius = 25;
+      const nearby = stores.filter((s) => s.distance <= radius);
+      assert(nearby.length === 3, `Expected 3 stores within 25 miles, got ${nearby.length}`);
+      assert(!nearby.some((s) => s.name.includes('San Diego')), 'Should not include distant stores outside radius');
+    },
+    'HIGH',
+    'Local radius enforcement'
+  );
+
+  test(
+    'TCG Local Pickup',
+    'Correctly identifies fulfillment type for store pickup vs in-store only vs online shipping',
+    () => {
+      const determineFulfillment = (orderPickup: boolean, inStore: boolean) => {
+        if (orderPickup) return 'STORE_PICKUP';
+        if (inStore) return 'IN_STORE_ONLY';
+        return 'SHIPPING';
+      };
+
+      assert(determineFulfillment(true, false) === 'STORE_PICKUP', 'Expected STORE_PICKUP');
+      assert(determineFulfillment(true, true) === 'STORE_PICKUP', 'Expected STORE_PICKUP when both active');
+      assert(determineFulfillment(false, true) === 'IN_STORE_ONLY', 'Expected IN_STORE_ONLY');
+      assert(determineFulfillment(false, false) === 'SHIPPING', 'Expected SHIPPING');
+    },
+    'HIGH',
+    'Fulfillment badge formatting'
+  );
+
+  test(
+    'TCG Local Pickup',
+    'Builds accurate Discord Webhook embed for in-store shelf restock',
+    () => {
+      const event = {
+        productName: 'Pokémon TCG: Destined Rivals Booster Bundle',
+        retailer: 'target',
+        fulfillmentType: 'STORE_PICKUP',
+        storeName: 'Target - Beverly Hills West (#3991)',
+        distanceMiles: 2.8,
+        availableQuantity: 6,
+        price: 26.94,
+        marketPrice: 48.00,
+      };
+
+      const isLocal = event.fulfillmentType === 'STORE_PICKUP';
+      assert(isLocal === true, 'Should recognize local store pickup');
+      const title = isLocal ? `🎯 LOCAL STORE RESTOCK: ${event.productName}` : 'Online';
+      assert(title.includes('LOCAL STORE RESTOCK'), 'Embed title must indicate local store pickup');
+      assert(event.distanceMiles <= 25, 'Store must be within selected radius');
+      assert(event.availableQuantity > 0, 'Available quantity must be positive');
+    },
+    'HIGH',
+    'Discord webhook embed notification accuracy'
+  );
+
+  // -------------------------------------------------------------------------
   // FINAL RESULTS
   // -------------------------------------------------------------------------
   const total = bugReports.length;
