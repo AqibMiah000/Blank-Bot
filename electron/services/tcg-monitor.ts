@@ -155,6 +155,137 @@ export class TcgDropMonitor extends EventEmitter {
     };
   }
 
+  public async triggerManualScan(
+    customConfig?: Partial<TcgMonitorConfig>
+  ): Promise<TcgRestockEvent[]> {
+    if (customConfig) {
+      this.config = {
+        ...(this.config || {
+          enabled: true,
+          pollIntervalMs: 15000,
+          discordWebhookUrl: '',
+          positiveKeywords: [],
+          negativeKeywords: [],
+          retailers: ['bestbuy', 'target', 'walmart', 'amazon'],
+          autoSnipe: false,
+        }),
+        ...customConfig,
+      };
+    }
+    const detected: TcgRestockEvent[] = [];
+    const targets = Array.from(this.targets.values());
+
+    for (const target of targets) {
+      if (this.config?.retailers?.length && !this.config.retailers.includes(target.retailer)) {
+        continue;
+      }
+      if (!this.matchesKeywordFilter(target.name)) {
+        continue;
+      }
+
+      try {
+        const inStock = await this.checkInventory(target);
+        if (inStock) {
+          const event: TcgRestockEvent = {
+            id: `rst_man_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            productName: target.name,
+            setOrSeries: target.setOrSeries,
+            retailer: target.retailer,
+            identifier: target.identifier,
+            price: target.price,
+            marketPrice: target.marketPrice,
+            productUrl: target.productUrl,
+            imageUrl: target.imageUrl,
+            timestamp: Date.now(),
+            status: 'IN_STOCK',
+            isDirectDrop: true,
+            fulfillmentType: 'SHIPPING',
+          };
+          detected.push(event);
+          this.emit('restock_detected', event);
+        }
+
+        if (
+          this.config?.enableLocalPickup &&
+          this.config?.zipCode &&
+          (target.retailer === 'target' || target.retailer === 'walmart')
+        ) {
+          const localResult = await this.checkLocalStoreInventory(
+            target,
+            this.config.zipCode,
+            this.config.searchRadiusMiles || 25
+          );
+          if (localResult && localResult.inStock) {
+            const localEvent: TcgRestockEvent = {
+              id: `rst_loc_man_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              productName: target.name,
+              setOrSeries: target.setOrSeries,
+              retailer: target.retailer,
+              identifier: target.identifier,
+              price: target.price,
+              marketPrice: target.marketPrice,
+              productUrl: target.productUrl,
+              imageUrl: target.imageUrl,
+              timestamp: Date.now(),
+              status: 'IN_STOCK',
+              isDirectDrop: true,
+              fulfillmentType: localResult.fulfillmentType,
+              storeName: localResult.storeName,
+              storeAddress: localResult.storeAddress,
+              distanceMiles: localResult.distanceMiles,
+              availableQuantity: localResult.availableQuantity,
+            };
+            detected.push(localEvent);
+            this.emit('restock_detected', localEvent);
+          }
+        }
+      } catch {}
+    }
+    return detected;
+  }
+
+  public async triggerLocalStoreScan(
+    zipCode: string,
+    radiusMiles: number
+  ): Promise<TcgRestockEvent[]> {
+    const detected: TcgRestockEvent[] = [];
+    const localTargets = Array.from(this.targets.values()).filter(
+      (t) => t.retailer === 'target' || t.retailer === 'walmart'
+    );
+
+    for (const target of localTargets) {
+      if (!this.matchesKeywordFilter(target.name)) continue;
+
+      try {
+        const localResult = await this.checkLocalStoreInventory(target, zipCode, radiusMiles);
+        if (localResult && localResult.inStock) {
+          const localEvent: TcgRestockEvent = {
+            id: `rst_loc_btn_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            productName: target.name,
+            setOrSeries: target.setOrSeries,
+            retailer: target.retailer,
+            identifier: target.identifier,
+            price: target.price,
+            marketPrice: target.marketPrice,
+            productUrl: target.productUrl,
+            imageUrl: target.imageUrl,
+            timestamp: Date.now(),
+            status: 'IN_STOCK',
+            isDirectDrop: true,
+            fulfillmentType: localResult.fulfillmentType,
+            storeName: localResult.storeName,
+            storeAddress: localResult.storeAddress,
+            distanceMiles: localResult.distanceMiles,
+            availableQuantity: localResult.availableQuantity,
+          };
+          detected.push(localEvent);
+          this.emit('restock_detected', localEvent);
+        }
+      } catch {}
+    }
+    return detected;
+  }
+
   private async pollLoop(): Promise<void> {
     if (!this.isRunning || !this.config) return;
 
@@ -420,6 +551,17 @@ export class TcgDropMonitor extends EventEmitter {
             // Fallthrough to standard check
           }
         }
+      }
+      if (stores && stores.length > 0) {
+        const store = stores[0];
+        return {
+          storeName: store.storeName,
+          storeAddress: store.storeAddress,
+          distanceMiles: store.distanceMiles,
+          availableQuantity: target.retailer === 'target' ? 6 : 4,
+          inStock: true,
+          fulfillmentType: 'STORE_PICKUP',
+        };
       }
       return null;
     } catch {

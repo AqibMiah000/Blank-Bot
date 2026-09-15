@@ -349,6 +349,14 @@ function registerIpcHandlers(): void {
     return sendTcgRestockWebhook(url, event);
   });
 
+  ipcMain.handle('tcg-monitor:manual-scan', async (_, customConfig?: Partial<TcgMonitorConfig>) => {
+    return tcgDropMonitor.triggerManualScan(customConfig);
+  });
+
+  ipcMain.handle('tcg-monitor:scan-local-stores', async (_, zipCode: string, radiusMiles: number) => {
+    return tcgDropMonitor.triggerLocalStoreScan(zipCode, radiusMiles);
+  });
+
   // Shell External URL Dispatcher
   ipcMain.handle('shell:open-external', async (_, url: string) => {
     return shell.openExternal(url);

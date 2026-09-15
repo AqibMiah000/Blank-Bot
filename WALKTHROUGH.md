@@ -415,6 +415,18 @@ Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving y
    - Check the **"Auto-Snipe Drop Tasks"** toggle in the scanner settings.
    - When active, Blank won't just ping your Discord—it immediately spawns and executes a high-speed checkout task using your default profile and proxy pool before manual buyers can even open their notifications.
 
+5. **Audio Chime Alerts on Drop Detection**:
+   - Blank synthesizes an instant crystal audio chime via Web Audio when any online restock or physical shelf event is detected, notifying you immediately even if the app is minimized.
+   - Click the **Volume** icon in the header to toggle audio alerts on/off or preview the chime sound.
+
+6. **Physical "Check Nearby Shelves" Button**:
+   - Located inside the **Local Shelf & Pickup Radar** card.
+   - Click **"Check Nearby Shelves (ZIP [Your-ZIP])"** to manually force a scan of local store branches within your selected radius and immediately display confirmed shelf inventory.
+
+7. **Overall Physical "Refresh All Channels" Button**:
+   - Located in the top header bar and above the event feed.
+   - Press **"Refresh All Channels"** at any time to execute an immediate, on-demand inventory check across Best Buy, Target, Walmart, and Amazon.
+
 ---
 
 ## 17. Multi-Task Mass Edit & Quick-Task Drop Launcher
