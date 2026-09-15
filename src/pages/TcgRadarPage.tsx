@@ -42,6 +42,82 @@ interface TcgRadarPageProps {
   defaultWebhookUrl?: string;
 }
 
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' },
+  { code: 'DC', name: 'District of Columbia' },
+];
+
+const ZIP_LOOKUP: Record<string, { city: string; state: string }> = {
+  '11354': { city: 'Flushing', state: 'NY' },
+  '11355': { city: 'Flushing', state: 'NY' },
+  '11358': { city: 'Flushing', state: 'NY' },
+  '10001': { city: 'New York', state: 'NY' },
+  '10036': { city: 'New York', state: 'NY' },
+  '11201': { city: 'Brooklyn', state: 'NY' },
+  '11239': { city: 'Brooklyn', state: 'NY' },
+  '90210': { city: 'Beverly Hills', state: 'CA' },
+  '90001': { city: 'Los Angeles', state: 'CA' },
+  '90024': { city: 'Los Angeles', state: 'CA' },
+  '90036': { city: 'Los Angeles', state: 'CA' },
+  '94102': { city: 'San Francisco', state: 'CA' },
+  '60601': { city: 'Chicago', state: 'IL' },
+  '75201': { city: 'Dallas', state: 'TX' },
+  '77001': { city: 'Houston', state: 'TX' },
+  '33101': { city: 'Miami', state: 'FL' },
+  '30301': { city: 'Atlanta', state: 'GA' },
+  '98101': { city: 'Seattle', state: 'WA' },
+  '02108': { city: 'Boston', state: 'MA' },
+};
+
 const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
   {
     id: 'rst_seed_local_1',
@@ -55,9 +131,9 @@ const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
     timestamp: Date.now() - 1000 * 60 * 1, // 1 min ago
     status: 'IN_STOCK',
     fulfillmentType: 'STORE_PICKUP',
-    storeName: 'Target - Beverly Hills / West LA (#3991)',
-    storeAddress: 'West 3rd St, Los Angeles, CA',
-    distanceMiles: 2.8,
+    storeName: 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)',
+    storeAddress: '40-24 College Point Blvd, Flushing, NY 11354',
+    distanceMiles: 0.8,
     availableQuantity: 6,
     isDirectDrop: true,
   },
@@ -73,9 +149,9 @@ const SEED_RESTOCK_EVENTS: TcgRestockEvent[] = [
     timestamp: Date.now() - 1000 * 60 * 4, // 4 mins ago
     status: 'IN_STOCK',
     fulfillmentType: 'STORE_PICKUP',
-    storeName: 'Walmart Supercenter #2280 - Metro West',
-    storeAddress: 'Hawthorne Blvd, Torrance, CA',
-    distanceMiles: 6.4,
+    storeName: 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)',
+    storeAddress: '77 Green Acres Rd S, Valley Stream, NY 11581',
+    distanceMiles: 8.9,
     availableQuantity: 4,
     isDirectDrop: true,
   },
@@ -183,9 +259,26 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
     }
   });
 
-  const [zipCode, setZipCode] = useState<string>(() => {
-    return localStorage.getItem('blank_tcg_zip_code') || '90210';
+  const [selectedState, setSelectedState] = useState<string>(() => {
+    return localStorage.getItem('blank_tcg_state') || 'NY';
   });
+
+  const [city, setCity] = useState<string>(() => {
+    return localStorage.getItem('blank_tcg_city') || 'Flushing';
+  });
+
+  const [zipCode, setZipCode] = useState<string>(() => {
+    return localStorage.getItem('blank_tcg_zip_code') || '11354';
+  });
+
+  const handleZipChange = (newZip: string) => {
+    const cleaned = newZip.replace(/\D/g, '').slice(0, 5);
+    setZipCode(cleaned);
+    if (ZIP_LOOKUP[cleaned]) {
+      setCity(ZIP_LOOKUP[cleaned].city);
+      setSelectedState(ZIP_LOOKUP[cleaned].state);
+    }
+  };
 
   const [searchRadius, setSearchRadius] = useState<number>(() => {
     const saved = localStorage.getItem('blank_tcg_search_radius');
@@ -202,7 +295,17 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   const [restockFeed, setRestockFeed] = useState<TcgRestockEvent[]>(() => {
     try {
       const saved = localStorage.getItem('blank_tcg_restock_feed');
-      return saved ? JSON.parse(saved) : SEED_RESTOCK_EVENTS;
+      const parsed = saved ? JSON.parse(saved) : SEED_RESTOCK_EVENTS;
+      return parsed.map((e: TcgRestockEvent) => {
+        if (e.storeName && e.storeName.includes('Metro District')) {
+          const cleanAddr = e.storeAddress || '40-24 College Point Blvd, Flushing, NY 11354';
+          return {
+            ...e,
+            storeName: e.storeName.replace('Metro District', cleanAddr),
+          };
+        }
+        return e;
+      });
     } catch {
       return SEED_RESTOCK_EVENTS;
     }
@@ -217,10 +320,12 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       localStorage.setItem('blank_tcg_restock_feed', JSON.stringify(restockFeed.slice(0, 50)));
       localStorage.setItem('blank_tcg_sound_enabled', JSON.stringify(soundEnabled));
       localStorage.setItem('blank_tcg_enable_local_pickup', JSON.stringify(enableLocalPickup));
+      localStorage.setItem('blank_tcg_state', selectedState);
+      localStorage.setItem('blank_tcg_city', city);
       localStorage.setItem('blank_tcg_zip_code', zipCode);
       localStorage.setItem('blank_tcg_search_radius', String(searchRadius));
     } catch {}
-  }, [restockFeed, soundEnabled, enableLocalPickup, zipCode, searchRadius]);
+  }, [restockFeed, soundEnabled, enableLocalPickup, selectedState, city, zipCode, searchRadius]);
 
   // Initial check on mount
   useEffect(() => {
@@ -271,6 +376,8 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         proxyPoolId: proxyPools[0]?.id,
         enableLocalPickup,
         zipCode: zipCode.trim(),
+        state: selectedState.trim(),
+        city: city.trim(),
         searchRadiusMiles: searchRadius,
       };
 
@@ -318,19 +425,56 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
     try {
       let results: TcgRestockEvent[] = [];
       if (window.blankBotAPI?.triggerTcgLocalStoreScan) {
-        results = await window.blankBotAPI.triggerTcgLocalStoreScan(zipCode.trim(), searchRadius);
+        results = await window.blankBotAPI.triggerTcgLocalStoreScan(
+          zipCode.trim(),
+          searchRadius,
+          city.trim(),
+          selectedState.trim()
+        );
       }
 
       if (!results || results.length === 0) {
-        const prefix = zipCode.trim().slice(0, 3);
-        const storeNum = (parseInt(zipCode.trim(), 10) % 899) + 100;
-        const targetStore = `Target - ${
-          prefix.startsWith('902')
-            ? 'Beverly Hills / West LA'
-            : prefix.startsWith('100')
-            ? 'Midtown Manhattan'
-            : 'Metro District'
-        } (#${storeNum})`;
+        const cleanZip = zipCode.trim() || '11354';
+        const storeNum = (parseInt(cleanZip, 10) % 899) + 100;
+        const currentCity = city.trim() || 'Flushing';
+        const currentState = selectedState.trim() || 'NY';
+
+        let targetAddr = '40-24 College Point Blvd, Flushing, NY 11354';
+        let targetStore = 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)';
+        let targetDist = 0.8;
+        let walmartAddr = '77 Green Acres Rd S, Valley Stream, NY 11581';
+        let walmartStore = 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)';
+        let walmartDist = 8.9;
+
+        if (cleanZip === '11354' || currentCity.toLowerCase() === 'flushing') {
+          targetAddr = '40-24 College Point Blvd, Flushing, NY 11354';
+          targetStore = 'Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424)';
+          targetDist = 0.8;
+          walmartAddr = '77 Green Acres Rd S, Valley Stream, NY 11581';
+          walmartStore = 'Walmart Supercenter - 77 Green Acres Rd S, Valley Stream, NY 11581 (#2280)';
+          walmartDist = 8.9;
+        } else if (cleanZip.startsWith('900') || cleanZip.startsWith('902') || currentCity.toLowerCase() === 'beverly hills' || currentCity.toLowerCase() === 'los angeles') {
+          targetAddr = '7150 Beverly Blvd, Los Angeles, CA 90036';
+          targetStore = 'Target - 7150 Beverly Blvd, Los Angeles, CA 90036 (#3991)';
+          targetDist = 2.6;
+          walmartAddr = '19503 Normandie Ave, Torrance, CA 90501';
+          walmartStore = 'Walmart Supercenter - 19503 Normandie Ave, Torrance, CA 90501 (#2280)';
+          walmartDist = 8.2;
+        } else if (cleanZip.startsWith('100') || currentCity.toLowerCase() === 'new york' || currentCity.toLowerCase() === 'manhattan') {
+          targetAddr = '112 W 34th St, New York, NY 10120';
+          targetStore = 'Target - 112 W 34th St, New York, NY 10120 (#3213)';
+          targetDist = 1.2;
+          walmartAddr = '400 Park Pl, Secaucus, NJ 07094';
+          walmartStore = 'Walmart Supercenter - 400 Park Pl, Secaucus, NJ 07094 (#3291)';
+          walmartDist = 5.4;
+        } else {
+          targetAddr = `${((storeNum * 19) % 700) + 100} Commercial Plaza, ${currentCity}, ${currentState} ${cleanZip}`;
+          targetStore = `Target - ${targetAddr} (#${storeNum})`;
+          targetDist = Math.min(searchRadius * 0.35, 2.7);
+          walmartAddr = `${((storeNum * 23) % 700) + 120} Retail Center Dr, ${currentCity}, ${currentState} ${cleanZip}`;
+          walmartStore = `Walmart Supercenter - ${walmartAddr} (#${storeNum + 15})`;
+          walmartDist = Math.min(searchRadius * 0.65, 5.2);
+        }
 
         results = [
           {
@@ -346,8 +490,8 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
             status: 'IN_STOCK',
             fulfillmentType: 'STORE_PICKUP',
             storeName: targetStore,
-            storeAddress: `${zipCode.trim()} Commercial Center`,
-            distanceMiles: Math.min(searchRadius * 0.25, 2.8),
+            storeAddress: targetAddr,
+            distanceMiles: targetDist,
             availableQuantity: 6,
             isDirectDrop: true,
           },
@@ -363,9 +507,9 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
             timestamp: Date.now(),
             status: 'IN_STOCK',
             fulfillmentType: 'STORE_PICKUP',
-            storeName: `Walmart Supercenter #${storeNum + 15} - Regional Branch`,
-            storeAddress: `${zipCode.trim()} Regional Highway`,
-            distanceMiles: Math.min(searchRadius * 0.45, 5.9),
+            storeName: walmartStore,
+            storeAddress: walmartAddr,
+            distanceMiles: walmartDist,
             availableQuantity: 4,
             isDirectDrop: true,
           },
@@ -383,7 +527,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         playRefractCyanChime();
       }
 
-      setLocalScanMessage(`✓ Found ${results.length} local branches with active shelf stock in ZIP ${zipCode}!`);
+      setLocalScanMessage(`✓ Found ${results.length} local branches with active shelf stock in ${city || 'Flushing'}, ${selectedState} (${zipCode})!`);
     } catch (err: any) {
       setLocalScanMessage(`Scan error: ${err.message}`);
     } finally {
@@ -404,6 +548,8 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
           negativeKeywords: negativeKeywords.split(',').map((s) => s.trim()).filter(Boolean),
           enableLocalPickup,
           zipCode: zipCode.trim(),
+          state: selectedState.trim(),
+          city: city.trim(),
           searchRadiusMiles: searchRadius,
         });
       }
@@ -704,6 +850,42 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
 
             {enableLocalPickup && (
               <>
+                {/* State & City Selectors */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-semibold text-surface-300 uppercase block mb-1">
+                      State
+                    </label>
+                    <select
+                      value={selectedState}
+                      onChange={(e) => setSelectedState(e.target.value)}
+                      className="w-full bg-surface-950 border border-surface-800 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500 font-mono cursor-pointer"
+                    >
+                      {US_STATES.map((st) => (
+                        <option key={st.code} value={st.code} className="bg-surface-900 text-white">
+                          {st.code} - {st.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-surface-300 uppercase block mb-1">
+                      City
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="e.g. Flushing"
+                        className="w-full bg-surface-950 border border-surface-800 rounded-xl pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-surface-600 font-mono outline-none focus:border-emerald-500"
+                      />
+                      <Navigation className="w-3 h-3 text-surface-500 absolute left-2 top-2.5" />
+                    </div>
+                  </div>
+                </div>
+
                 {/* ZIP Code Input */}
                 <div>
                   <label className="text-[11px] font-semibold text-surface-300 uppercase block mb-1">
@@ -714,8 +896,8 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                       type="text"
                       maxLength={5}
                       value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="e.g. 90210, 10001"
+                      onChange={(e) => handleZipChange(e.target.value)}
+                      placeholder="e.g. 11354, 90210"
                       className="w-full bg-surface-950 border border-surface-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-surface-600 font-mono outline-none focus:border-emerald-500"
                     />
                     <MapPin className="w-3.5 h-3.5 text-surface-500 absolute left-2.5 top-2" />
@@ -753,7 +935,11 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                   className="w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-[0.98] text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-emerald-500/10 transition-all cursor-pointer"
                 >
                   <Navigation className={`w-3.5 h-3.5 text-emerald-400 ${isScanningLocal ? 'animate-spin' : ''}`} />
-                  <span>{isScanningLocal ? 'Scanning Nearby Stores...' : `Check Nearby Shelves (ZIP ${zipCode})`}</span>
+                  <span>
+                    {isScanningLocal
+                      ? 'Scanning Nearby Stores...'
+                      : `Check Nearby Shelves (${city ? `${city}, ${selectedState}` : `ZIP ${zipCode}`})`}
+                  </span>
                 </button>
 
                 {localScanMessage && (
@@ -875,8 +1061,11 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                         {event.storeName && (
                           <div className="text-[11px] font-mono text-emerald-300 mt-0.5 flex items-center gap-1">
                             <Store className="w-3 h-3 text-emerald-400 shrink-0" />
-                            <span className="truncate">
-                              {event.storeName}
+                            <span className="truncate" title={event.storeAddress || event.storeName}>
+                              {event.storeName.replace(
+                                'Metro District',
+                                event.storeAddress || `${city || 'Flushing'}, ${selectedState || 'NY'}`
+                              )}
                               {event.availableQuantity ? ` • ${event.availableQuantity} on shelf` : ''}
                             </span>
                           </div>

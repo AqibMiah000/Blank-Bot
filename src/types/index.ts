@@ -192,6 +192,8 @@ export interface TcgMonitorConfig {
   // Local Store Pickup Radar
   enableLocalPickup?: boolean;
   zipCode?: string;
+  state?: string;
+  city?: string;
   searchRadiusMiles?: number;
 }
 

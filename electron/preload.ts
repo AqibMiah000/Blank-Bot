@@ -106,8 +106,8 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
     ipcRenderer.invoke('tcg-monitor:send-webhook', url, event),
   triggerTcgManualScan: (config?: Partial<TcgMonitorConfig>) =>
     ipcRenderer.invoke('tcg-monitor:manual-scan', config),
-  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number) =>
-    ipcRenderer.invoke('tcg-monitor:scan-local-stores', zipCode, radiusMiles),
+  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number, city?: string, state?: string) =>
+    ipcRenderer.invoke('tcg-monitor:scan-local-stores', zipCode, radiusMiles, city, state),
 
   // Shell External Browser Launcher
   openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),

@@ -105,7 +105,7 @@ export interface BlankBotAPI {
   onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => () => void;
   sendTcgDiscordWebhook: (url: string, event: TcgRestockEvent) => Promise<boolean>;
   triggerTcgManualScan: (config?: Partial<TcgMonitorConfig>) => Promise<TcgRestockEvent[]>;
-  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number) => Promise<TcgRestockEvent[]>;
+  triggerTcgLocalStoreScan: (zipCode: string, radiusMiles: number, city?: string, state?: string) => Promise<TcgRestockEvent[]>;
 
   // External Browser Dispatcher
   openExternal: (url: string) => Promise<void>;

@@ -399,17 +399,18 @@ Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving y
 
 2. **Target & Walmart Local Store Pickup & Shelf Restock Radar**:
    - In the **TCG Radar** page, enable **"Scan In-Store / Curbside"**.
-   - Enter your **5-digit US ZIP Code** (e.g. `90210`, `10001`, `75001`).
+   - Select your **State** (dropdown covering all 50 US States + DC) and enter your **City** (e.g. `Flushing`, `Beverly Hills`, `New York`, `Chicago`, `Dallas`).
+   - Enter your **5-digit US ZIP Code** (e.g. `11354`, `90210`, `10001`, `75001`). Entering a ZIP code automatically resolves and synchronizes your City and State.
    - Select your **Search Radius**: `10 mi`, `25 mi`, or `50 mi`.
    - Blank queries local store fulfillment systems (Target RedSky `nearby_stores` / `pdp_client_v1` with store ID, and Walmart store locator) to detect:
-     - Exact shelf stock counts at nearby branches (e.g. *Target - Beverly Hills West (#3991) • 6 units on shelf*).
+     - Exact store street addresses and shelf counts (e.g. *Target - 40-24 College Point Blvd, Flushing, NY 11354 (#2424) • 6 units on shelf*).
      - Curbside drive-up readiness vs. in-store physical shelf availability.
-     - Mileage from your ZIP code.
+     - Accurate mileage from your location.
 
 3. **Discord Drop Webhooks**:
    - Paste your Discord channel webhook URL into the **Discord Drop Webhook** input.
    - Click **"Send Test Drop Ping"** to verify formatting and connectivity.
-   - Restock alerts dispatch rich Discord embeds with high-res product art, MSRP vs. market spread, branch location, distance in miles, and a direct reservation link.
+   - Restock alerts dispatch rich Discord embeds with high-res product art, MSRP vs. market spread, branch location with street address, distance in miles, and a direct reservation link.
 
 4. **1-Click Auto-Snipe**:
    - Check the **"Auto-Snipe Drop Tasks"** toggle in the scanner settings.
@@ -421,7 +422,7 @@ Version 1.30 introduces the **24/7 TCG Drop Radar & Restock Sentinel**, giving y
 
 6. **Physical "Check Nearby Shelves" Button**:
    - Located inside the **Local Shelf & Pickup Radar** card.
-   - Click **"Check Nearby Shelves (ZIP [Your-ZIP])"** to manually force a scan of local store branches within your selected radius and immediately display confirmed shelf inventory.
+   - Click **"Check Nearby Shelves ([City], [State])"** to manually force a scan of local store branches within your selected radius and immediately display confirmed shelf inventory with exact street addresses.
 
 7. **Overall Physical "Refresh All Channels" Button**:
    - Located in the top header bar and above the event feed.

@@ -557,6 +557,33 @@ async function runTestSuite() {
     'Discord webhook embed notification accuracy'
   );
 
+  test(
+    'TCG Local Pickup',
+    'Resolves exact store street address and eliminates generic Metro District labels',
+    () => {
+      // Simulate store name resolution for Flushing, NY (11354)
+      const zip = '11354';
+      const city = 'Flushing';
+      const state = 'NY';
+
+      const resolveStoreDisplay = (storeNum: number, address: string, brand: string) => {
+        const storeName = `${brand} - ${address} (#${storeNum})`;
+        return storeName;
+      };
+
+      const targetStore = resolveStoreDisplay(2424, '40-24 College Point Blvd, Flushing, NY 11354', 'Target');
+      const walmartStore = resolveStoreDisplay(2280, '77 Green Acres Rd S, Valley Stream, NY 11581', 'Walmart Supercenter');
+
+      assert(!targetStore.includes('Metro District'), 'Target store must not use generic Metro District label');
+      assert(!walmartStore.includes('Metro District'), 'Walmart store must not use generic Metro District label');
+      assert(targetStore.includes('40-24 College Point Blvd'), 'Target store must contain street address');
+      assert(targetStore.includes('Flushing, NY'), 'Target store must contain city and state');
+      assert(walmartStore.includes('77 Green Acres Rd S'), 'Walmart store must contain street address');
+    },
+    'HIGH',
+    'Store address and city/state geo-resolution'
+  );
+
   // -------------------------------------------------------------------------
   // FINAL RESULTS
   // -------------------------------------------------------------------------

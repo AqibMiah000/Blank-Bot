@@ -353,9 +353,12 @@ function registerIpcHandlers(): void {
     return tcgDropMonitor.triggerManualScan(customConfig);
   });
 
-  ipcMain.handle('tcg-monitor:scan-local-stores', async (_, zipCode: string, radiusMiles: number) => {
-    return tcgDropMonitor.triggerLocalStoreScan(zipCode, radiusMiles);
-  });
+  ipcMain.handle(
+    'tcg-monitor:scan-local-stores',
+    async (_, zipCode: string, radiusMiles: number, city?: string, state?: string) => {
+      return tcgDropMonitor.triggerLocalStoreScan(zipCode, radiusMiles, city, state);
+    }
+  );
 
   // Shell External URL Dispatcher
   ipcMain.handle('shell:open-external', async (_, url: string) => {
