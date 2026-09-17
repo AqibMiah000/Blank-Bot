@@ -1001,4 +1001,9 @@ async function runTestSuite() {
   }
 }
 
-runTestSuite().catch(console.error);
+runTestSuite()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
