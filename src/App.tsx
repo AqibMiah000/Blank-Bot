@@ -481,6 +481,7 @@ export const App: React.FC = () => {
         walmart: 'Walmart Supercenter',
         amazon: 'Amazon Direct',
         apple: 'Apple Store',
+        gamestop: 'GameStop Operations',
       };
       const newGroup: TaskGroup = {
         id: `grp_${Date.now()}`,

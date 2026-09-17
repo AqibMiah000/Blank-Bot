@@ -14,6 +14,7 @@ import { WalmartWorker } from '../modules/walmart';
 import { TargetWorker } from '../modules/target';
 import { AmazonWorker } from '../modules/amazon';
 import { AppleWorker } from '../modules/apple';
+import { GameStopWorker } from '../modules/gamestop';
 import { sendDiscordCheckoutWebhook } from '../services/discord';
 import { audioService } from '../services/audio';
 import { networkSentinel } from '../services/network-sentinel';
@@ -117,6 +118,9 @@ export class TaskEngine extends EventEmitter {
         break;
       case 'apple':
         worker = new AppleWorker(task, profile, proxyPool, account);
+        break;
+      case 'gamestop':
+        worker = new GameStopWorker(task, profile, proxyPool, account);
         break;
       default:
         console.error(`Unsupported retailer: ${task.retailer}`);

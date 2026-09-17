@@ -102,6 +102,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         return 'ASIN (e.g. B0DC87X1L9) or ASIN:OfferListingId';
       case 'apple':
         return 'Part Number (e.g. MU793LL/A) or Direct Apple URL';
+      case 'gamestop':
+        return 'GameStop SKU (e.g. 418901) or Product URL';
       default:
         return 'Product SKU or URL';
     }
@@ -130,8 +132,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-2">
               Target Retail Platform
             </label>
-            <div className="grid grid-cols-5 gap-2">
-              {(['bestbuy', 'walmart', 'target', 'amazon', 'apple'] as Retailer[]).map((r) => (
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {(['bestbuy', 'walmart', 'target', 'amazon', 'apple', 'gamestop'] as Retailer[]).map((r) => (
                 <button
                   type="button"
                   key={r}

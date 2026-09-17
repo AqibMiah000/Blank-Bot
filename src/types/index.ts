@@ -1,4 +1,4 @@
-export type Retailer = 'bestbuy' | 'walmart' | 'target' | 'amazon' | 'apple';
+export type Retailer = 'bestbuy' | 'walmart' | 'target' | 'amazon' | 'apple' | 'gamestop';
 
 export type TaskStatus =
   | 'IDLE'

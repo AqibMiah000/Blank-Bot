@@ -104,6 +104,10 @@ export const TasksPage: React.FC<TasksPageProps> = ({
       const partMatch = trimmed.match(/\/product\/([A-Z0-9/]+)/i);
       return { retailer: 'apple', cleanInput: partMatch ? partMatch[1] : trimmed };
     }
+    if (/gamestop\.com/i.test(trimmed)) {
+      const gsMatch = trimmed.match(/\/([0-9]{6,8})\.html/i) || trimmed.match(/sku=([0-9]+)/i);
+      return { retailer: 'gamestop', cleanInput: gsMatch ? gsMatch[1] : trimmed };
+    }
     // Fallback to currently selected group's retailer
     const fallbackRetailer = taskGroups.find((g) => g.id === selectedGroupId)?.retailer || 'bestbuy';
     return { retailer: fallbackRetailer, cleanInput: trimmed };

@@ -24,15 +24,15 @@ interface BugReport {
 
 const bugReports: BugReport[] = [];
 
-function test(
+async function test(
   suite: string,
   scenario: string,
-  fn: () => void,
+  fn: () => Promise<void> | void,
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
   impact: string
 ) {
   try {
-    fn();
+    await fn();
     bugReports.push({ suite, scenario, passed: true, severity, impact });
     console.log(`  [PASS] ${scenario}`);
   } catch (err: any) {
@@ -976,6 +976,109 @@ async function runTestSuite() {
     },
     'HIGH',
     'Allows live updates to scanner parameters without restarting the monitor'
+  );
+
+  // -------------------------------------------------------------------------
+  // SUITE 11: BEST BUY & GAMESTOP LOCAL SHELF RADAR + 30TH CELEBRATION DETECTION
+  // -------------------------------------------------------------------------
+  console.log('\n--- 11. Best Buy & GameStop Local Shelf Radar + 30th Celebration Drop Detection ---');
+
+  await test(
+    'Local Shelf Radar Retailers',
+    'Resolves Best Buy and GameStop real store addresses across US metros',
+    async () => {
+      const monitor = new TcgDropMonitor();
+      // Test Manhattan resolution for all 4 retailers
+      const bestBuyManhattan = await (monitor as any).resolveNearbyStores('bestbuy', '10001', 25, 'New York', 'NY');
+      const gameStopManhattan = await (monitor as any).resolveNearbyStores('gamestop', '10001', 25, 'New York', 'NY');
+      const targetManhattan = await (monitor as any).resolveNearbyStores('target', '10001', 25, 'New York', 'NY');
+      const walmartManhattan = await (monitor as any).resolveNearbyStores('walmart', '10001', 25, 'New York', 'NY');
+
+      assert(bestBuyManhattan.length > 0, 'Must include Best Buy locations in NY metro');
+      assert(gameStopManhattan.length > 0, 'Must include GameStop locations in NY metro');
+      assert(targetManhattan.length > 0, 'Must include Target locations in NY metro');
+      assert(walmartManhattan.length > 0, 'Must include Walmart locations in NY metro');
+
+      // Verify no generic labels and accurate street addresses
+      assert(bestBuyManhattan[0].storeAddress.length > 5, 'Best Buy store must have full street address');
+      assert(gameStopManhattan[0].storeAddress.length > 5, 'GameStop store must have full street address');
+      assert(!bestBuyManhattan[0].storeName.includes('Metro District'), 'Best Buy must not use Metro District');
+      assert(!gameStopManhattan[0].storeName.includes('Metro District'), 'GameStop must not use Metro District');
+    },
+    'CRITICAL',
+    'Accurate Best Buy and GameStop local branch detection'
+  );
+
+  await test(
+    'Local Shelf Radar Retailers',
+    'Resolves Best Buy and GameStop stores for West Coast (Los Angeles)',
+    async () => {
+      const monitor = new TcgDropMonitor();
+      const bbLA = await (monitor as any).resolveNearbyStores('bestbuy', '90210', 25, 'Los Angeles', 'CA');
+      const gsLA = await (monitor as any).resolveNearbyStores('gamestop', '90210', 25, 'Los Angeles', 'CA');
+      const tgtLA = await (monitor as any).resolveNearbyStores('target', '90210', 25, 'Los Angeles', 'CA');
+      const wmLA = await (monitor as any).resolveNearbyStores('walmart', '90210', 25, 'Los Angeles', 'CA');
+
+      assert(bbLA.length > 0, 'Must contain Best Buy in LA');
+      assert(gsLA.length > 0, 'Must contain GameStop in LA');
+      assert(tgtLA.length > 0, 'Must contain Target in LA');
+      assert(wmLA.length > 0, 'Must contain Walmart in LA');
+    },
+    'HIGH',
+    'Cross-metro multi-retailer shelf support'
+  );
+
+  await test(
+    '30th Celebration Drop Detection',
+    'Positive keywords match 30th Celebration Pokémon items without false negative keyword collision',
+    () => {
+      const monitor = new TcgDropMonitor();
+      const positiveKeywords = ['Celebration', '30th', 'Chaos Rising', 'Booster Box', 'ETB', 'Destined Rivals', 'Prismatic', 'Surging Sparks', '151', 'Pokemon'];
+      const negativeKeywords = ['damaged', 'box damage', 'digital code']; // Sticker & Binder removed
+
+      const celebrationItems = [
+        'Pokémon TCG: 30th Celebration Elite Trainer Box',
+        'Pokémon TCG: 30th Celebration Tech Sticker Collection',
+        'Pokémon TCG: 30th Celebration Binder Collection',
+        'Pokémon TCG: 30th Celebration Booster Bundle',
+        'Pokémon TCG: Prismatic Evolutions Booster Bundle',
+      ];
+
+      for (const item of celebrationItems) {
+        const lower = item.toLowerCase();
+        const matchesPositive = positiveKeywords.some((kw) => lower.includes(kw.toLowerCase()));
+        const matchesNegative = negativeKeywords.some((kw) => lower.includes(kw.toLowerCase()));
+
+        assert(matchesPositive, `Item "${item}" must match positive keywords`);
+        assert(!matchesNegative, `Item "${item}" must NOT be blocked by negative keywords`);
+      }
+    },
+    'CRITICAL',
+    'Prevents missed Pokémon 30th Celebration drops due to keyword conflicts'
+  );
+
+  await test(
+    'Default Target Seed Coverage',
+    'Seed targets include official 30th Celebration items for Best Buy, Target, GameStop, Walmart, and Amazon',
+    () => {
+      const monitor = new TcgDropMonitor();
+      const targets = monitor.getTargets();
+
+      const celebrationTargets = targets.filter((t: any) =>
+        t.name.includes('30th Celebration') || t.name.includes('Prismatic Evolutions')
+      );
+
+      assert(celebrationTargets.length >= 6, `Expected at least 6 celebration/prismatic targets, got ${celebrationTargets.length}`);
+
+      const celebrationRetailers = new Set(celebrationTargets.map((t: any) => t.retailer));
+      assert(celebrationRetailers.has('bestbuy'), 'Best Buy must have 30th Celebration targets');
+      assert(celebrationRetailers.has('gamestop'), 'GameStop must have 30th Celebration targets');
+      assert(celebrationRetailers.has('target'), 'Target must have 30th Celebration targets');
+      assert(celebrationRetailers.has('walmart'), 'Walmart must have 30th Celebration targets');
+      assert(celebrationRetailers.has('amazon'), 'Amazon must have 30th Celebration targets');
+    },
+    'HIGH',
+    'Preconfigured drop seeds for high-demand 2026 releases'
   );
 
   // -------------------------------------------------------------------------

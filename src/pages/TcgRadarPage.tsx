@@ -226,18 +226,24 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   const [positiveKeywords, setPositiveKeywords] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('blank_tcg_positive_keywords');
-      return saved !== null ? saved : 'Chaos Rising, Booster Box, ETB, Destined Rivals, OP-10, Prismatic';
+      if (saved === 'Chaos Rising, Booster Box, ETB, Destined Rivals, OP-10, Prismatic') {
+        return 'Celebration, 30th, Chaos Rising, Booster Box, ETB, Destined Rivals, Prismatic, Surging Sparks, 151, Pokemon';
+      }
+      return saved !== null ? saved : 'Celebration, 30th, Chaos Rising, Booster Box, ETB, Destined Rivals, Prismatic, Surging Sparks, 151, Pokemon';
     } catch {
-      return 'Chaos Rising, Booster Box, ETB, Destined Rivals, OP-10, Prismatic';
+      return 'Celebration, 30th, Chaos Rising, Booster Box, ETB, Destined Rivals, Prismatic, Surging Sparks, 151, Pokemon';
     }
   });
 
   const [negativeKeywords, setNegativeKeywords] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('blank_tcg_negative_keywords');
-      return saved !== null ? saved : 'binder, portfolio, damaged, pin, sticker';
+      if (saved === 'binder, portfolio, damaged, pin, sticker') {
+        return 'damaged, box damage, digital code';
+      }
+      return saved !== null ? saved : 'damaged, box damage, digital code';
     } catch {
-      return 'binder, portfolio, damaged, pin, sticker';
+      return 'damaged, box damage, digital code';
     }
   });
 
@@ -246,11 +252,14 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       const saved = localStorage.getItem('blank_tcg_selected_retailers');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          if (!parsed.includes('gamestop')) parsed.push('gamestop');
+          return parsed;
+        }
       }
-      return ['bestbuy', 'target', 'walmart', 'amazon'];
+      return ['bestbuy', 'target', 'walmart', 'amazon', 'gamestop'];
     } catch {
-      return ['bestbuy', 'target', 'walmart', 'amazon'];
+      return ['bestbuy', 'target', 'walmart', 'amazon', 'gamestop'];
     }
   });
 
@@ -567,7 +576,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
 
   const handleScanLocalStores = async () => {
     if (!isOnline) {
-      setLocalScanMessage('❌ Offline: No internet connection detected. Please connect to Wi-Fi or Ethernet to scan local Target & Walmart shelves.');
+      setLocalScanMessage('❌ Offline: No internet connection detected. Please connect to Wi-Fi or Ethernet to scan local Target, Walmart, Best Buy & GameStop shelves.');
       setTimeout(() => setLocalScanMessage(null), 6000);
       return;
     }
@@ -584,7 +593,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       if (window.blankBotAPI?.checkInternet) {
         const net = await window.blankBotAPI.checkInternet();
         if (!net.isOnline) {
-          setLocalScanMessage('❌ Offline: No internet connection detected. Please connect to Wi-Fi or Ethernet to query Target & Walmart store shelves.');
+          setLocalScanMessage('❌ Offline: No internet connection detected. Please connect to Wi-Fi or Ethernet to query Target, Walmart, Best Buy & GameStop store shelves.');
           setIsScanningLocal(false);
           setTimeout(() => setLocalScanMessage(null), 6000);
           return;
@@ -624,7 +633,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
         );
       } else {
         setLocalScanMessage(
-          `Queried Target & Walmart branches within ${searchRadius} mi of ${locationDesc}. 0 verified units currently on physical shelves (Out of Stock).`
+          `Queried Target, Walmart, Best Buy & GameStop branches within ${searchRadius} mi of ${locationDesc}. 0 verified units currently on physical shelves (Out of Stock).`
         );
       }
     } catch (err: any) {
@@ -948,7 +957,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                 Active Retailer Channels
               </span>
               <div className="grid grid-cols-2 gap-2">
-                {(['bestbuy', 'target', 'walmart', 'amazon'] as Retailer[]).map((ret) => (
+                {(['bestbuy', 'target', 'walmart', 'amazon', 'gamestop'] as Retailer[]).map((ret) => (
                   <button
                     key={ret}
                     type="button"
@@ -959,7 +968,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                         : 'bg-surface-950 text-surface-500 border border-surface-800'
                     }`}
                   >
-                    <span>{ret === 'bestbuy' ? 'Best Buy' : ret}</span>
+                    <span>{ret === 'bestbuy' ? 'Best Buy' : ret === 'gamestop' ? 'GameStop' : ret}</span>
                     {selectedRetailers.includes(ret) && (
                       <CheckCircle className="w-3 h-3 text-brand-400" />
                     )}
@@ -1003,7 +1012,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                 <Store className="w-3.5 h-3.5 text-emerald-400" />
                 Local Shelf &amp; Pickup Radar
               </span>
-              <span className="text-[10px] text-emerald-400 font-mono font-semibold">Target &amp; Walmart</span>
+              <span className="text-[10px] text-emerald-400 font-mono font-semibold">Target, Walmart, Best Buy &amp; GameStop</span>
             </div>
 
             {/* Toggle Enable Local Pickup */}
@@ -1136,7 +1145,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
 
                 <div className="p-2 rounded-xl bg-surface-950/70 border border-surface-800 text-[10px] text-surface-400 font-mono flex items-center gap-1.5">
                   <Navigation className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span>Target RedSky &amp; Walmart branches within {searchRadius} mi active.</span>
+                  <span>Target, Walmart, Best Buy &amp; GameStop branches within {searchRadius} mi active.</span>
                 </div>
               </>
             )}
@@ -1233,6 +1242,8 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
                                 ? 'bg-rose-600/20 text-rose-300 border border-rose-500/30'
                                 : event.retailer === 'walmart'
                                 ? 'bg-cyan-600/20 text-cyan-300 border border-cyan-500/30'
+                                : event.retailer === 'gamestop'
+                                ? 'bg-red-600/20 text-red-300 border border-red-500/30'
                                 : 'bg-amber-600/20 text-amber-300 border border-amber-500/30'
                             }`}
                           >
