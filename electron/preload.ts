@@ -104,6 +104,8 @@ contextBridge.exposeInMainWorld('blankBotAPI', {
   // 24/7 TCG Drop Radar & Restock Monitor
   startTcgMonitor: (config: TcgMonitorConfig, proxyPool?: ProxyPool) =>
     ipcRenderer.invoke('tcg-monitor:start', config, proxyPool),
+  updateTcgMonitorConfig: (config: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool) =>
+    ipcRenderer.invoke('tcg-monitor:update-config', config, proxyPool),
   stopTcgMonitor: () => ipcRenderer.invoke('tcg-monitor:stop'),
   getTcgMonitorStatus: () => ipcRenderer.invoke('tcg-monitor:get-status'),
   onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => {

@@ -106,6 +106,7 @@ export interface BlankBotAPI {
 
   // 24/7 TCG Drop Radar & Restock Monitor
   startTcgMonitor: (config: TcgMonitorConfig, proxyPool?: ProxyPool) => Promise<boolean>;
+  updateTcgMonitorConfig: (config: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool) => Promise<boolean>;
   stopTcgMonitor: () => Promise<boolean>;
   getTcgMonitorStatus: () => Promise<{ isRunning: boolean; trackedCount: number }>;
   onTcgRestockDetected: (callback: (event: TcgRestockEvent) => void) => () => void;

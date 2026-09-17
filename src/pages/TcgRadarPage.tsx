@@ -194,17 +194,65 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
 }) => {
   const isOnline = networkStatus ? networkStatus.isOnline !== false : (typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isRunning, setIsRunning] = useState(false);
-  const [pollInterval, setPollInterval] = useState(15); // seconds
-  const [webhookUrl, setWebhookUrl] = useState(defaultWebhookUrl);
-  const [autoSnipe, setAutoSnipe] = useState(false);
-  const [positiveKeywords, setPositiveKeywords] = useState('Chaos Rising, Booster Box, ETB, Destined Rivals, OP-10, Prismatic');
-  const [negativeKeywords, setNegativeKeywords] = useState('binder, portfolio, damaged, pin, sticker');
-  const [selectedRetailers, setSelectedRetailers] = useState<Retailer[]>([
-    'bestbuy',
-    'target',
-    'walmart',
-    'amazon',
-  ]);
+
+  // Scanner Parameters State with Full Persistence
+  const [pollInterval, setPollInterval] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_poll_interval');
+      return saved !== null ? parseInt(saved, 10) : 15;
+    } catch {
+      return 15;
+    }
+  });
+
+  const [webhookUrl, setWebhookUrl] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_webhook_url');
+      return saved !== null ? saved : defaultWebhookUrl;
+    } catch {
+      return defaultWebhookUrl;
+    }
+  });
+
+  const [autoSnipe, setAutoSnipe] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_auto_snipe');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+
+  const [positiveKeywords, setPositiveKeywords] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_positive_keywords');
+      return saved !== null ? saved : 'Chaos Rising, Booster Box, ETB, Destined Rivals, OP-10, Prismatic';
+    } catch {
+      return 'Chaos Rising, Booster Box, ETB, Destined Rivals, OP-10, Prismatic';
+    }
+  });
+
+  const [negativeKeywords, setNegativeKeywords] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_negative_keywords');
+      return saved !== null ? saved : 'binder, portfolio, damaged, pin, sticker';
+    } catch {
+      return 'binder, portfolio, damaged, pin, sticker';
+    }
+  });
+
+  const [selectedRetailers, setSelectedRetailers] = useState<Retailer[]>(() => {
+    try {
+      const saved = localStorage.getItem('blank_tcg_selected_retailers');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return ['bestbuy', 'target', 'walmart', 'amazon'];
+    } catch {
+      return ['bestbuy', 'target', 'walmart', 'amazon'];
+    }
+  });
 
   // Sound Alerts Configuration
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
@@ -298,7 +346,7 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [webhookTestStatus, setWebhookTestStatus] = useState<string | null>(null);
 
-  // Sync feed, sound, local pickup, and proxy settings to local storage
+  // Sync feed, sound, local pickup, proxy, and all scanner parameters to local storage & native disk
   useEffect(() => {
     try {
       localStorage.setItem('blank_tcg_restock_feed', JSON.stringify(restockFeed.slice(0, 50)));
@@ -309,8 +357,109 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
       localStorage.setItem('blank_tcg_zip_code', zipCode);
       localStorage.setItem('blank_tcg_search_radius', String(searchRadius));
       localStorage.setItem('blank_tcg_proxy_pool_id', selectedProxyPoolId);
-    } catch {}
-  }, [restockFeed, soundEnabled, enableLocalPickup, selectedState, city, zipCode, searchRadius, selectedProxyPoolId]);
+
+      // Scanner parameters persistence
+      localStorage.setItem('blank_tcg_poll_interval', String(pollInterval));
+      localStorage.setItem('blank_tcg_webhook_url', webhookUrl);
+      localStorage.setItem('blank_tcg_auto_snipe', JSON.stringify(autoSnipe));
+      localStorage.setItem('blank_tcg_positive_keywords', positiveKeywords);
+      localStorage.setItem('blank_tcg_negative_keywords', negativeKeywords);
+      localStorage.setItem('blank_tcg_selected_retailers', JSON.stringify(selectedRetailers));
+
+      // Native disk persistence to user data folder
+      if (window.blankBotAPI?.setStoreItem) {
+        window.blankBotAPI.setStoreItem('blank_tcg_scanner_params', {
+          pollInterval,
+          webhookUrl,
+          autoSnipe,
+          positiveKeywords,
+          negativeKeywords,
+          selectedRetailers,
+          selectedProxyPoolId,
+          enableLocalPickup,
+          selectedState,
+          city,
+          zipCode,
+          searchRadius,
+          soundEnabled,
+        });
+      }
+
+      // If scanner is actively running, update background monitor on the fly
+      if (isRunning && window.blankBotAPI?.updateTcgMonitorConfig) {
+        window.blankBotAPI.updateTcgMonitorConfig(
+          {
+            pollIntervalMs: pollInterval * 1000,
+            discordWebhookUrl: webhookUrl.trim(),
+            positiveKeywords: positiveKeywords.split(',').map((s) => s.trim()).filter(Boolean),
+            negativeKeywords: negativeKeywords.split(',').map((s) => s.trim()).filter(Boolean),
+            retailers: selectedRetailers,
+            autoSnipe,
+            proxyPoolId: selectedProxyPoolId || undefined,
+            enableLocalPickup,
+            zipCode: zipCode.trim(),
+            state: selectedState.trim(),
+            city: city.trim(),
+            searchRadiusMiles: searchRadius,
+          },
+          boundProxyPool
+        );
+      }
+    } catch (err) {
+      console.error('Failed to persist TCG scanner settings:', err);
+    }
+  }, [
+    restockFeed,
+    soundEnabled,
+    enableLocalPickup,
+    selectedState,
+    city,
+    zipCode,
+    searchRadius,
+    selectedProxyPoolId,
+    pollInterval,
+    webhookUrl,
+    autoSnipe,
+    positiveKeywords,
+    negativeKeywords,
+    selectedRetailers,
+    isRunning,
+    boundProxyPool,
+  ]);
+
+  // Initial restore from native disk storage if localStorage was empty
+  useEffect(() => {
+    if (window.blankBotAPI?.getStoreItem) {
+      window.blankBotAPI
+        .getStoreItem('blank_tcg_scanner_params')
+        .then((saved) => {
+          if (saved && typeof saved === 'object') {
+            if (saved.positiveKeywords !== undefined && localStorage.getItem('blank_tcg_positive_keywords') === null) {
+              setPositiveKeywords(saved.positiveKeywords);
+            }
+            if (saved.negativeKeywords !== undefined && localStorage.getItem('blank_tcg_negative_keywords') === null) {
+              setNegativeKeywords(saved.negativeKeywords);
+            }
+            if (saved.pollInterval !== undefined && localStorage.getItem('blank_tcg_poll_interval') === null) {
+              setPollInterval(saved.pollInterval);
+            }
+            if (saved.autoSnipe !== undefined && localStorage.getItem('blank_tcg_auto_snipe') === null) {
+              setAutoSnipe(saved.autoSnipe);
+            }
+            if (saved.selectedRetailers !== undefined && localStorage.getItem('blank_tcg_selected_retailers') === null) {
+              setSelectedRetailers(saved.selectedRetailers);
+            }
+            if (saved.webhookUrl !== undefined && localStorage.getItem('blank_tcg_webhook_url') === null) {
+              setWebhookUrl(saved.webhookUrl);
+            }
+            if (saved.selectedProxyPoolId !== undefined && localStorage.getItem('blank_tcg_proxy_pool_id') === null) {
+              setSelectedProxyPoolId(saved.selectedProxyPoolId);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   // Initial check on mount
   useEffect(() => {
@@ -702,10 +851,16 @@ export const TcgRadarPage: React.FC<TcgRadarPageProps> = ({
 
           {/* Scanner Settings */}
           <div className="p-4 rounded-2xl bg-surface-900 border border-surface-800 space-y-3">
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5 text-brand-400" />
-              Scanner Parameters
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Sliders className="w-3.5 h-3.5 text-brand-400" />
+                Scanner Parameters
+              </span>
+              <span className="text-[10px] text-emerald-400 font-mono font-semibold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-emerald-400" />
+                Auto-Saved
+              </span>
+            </div>
 
             {/* Poll Speed Slider */}
             <div>

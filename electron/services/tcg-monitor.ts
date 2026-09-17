@@ -184,6 +184,18 @@ export class TcgDropMonitor extends EventEmitter {
     };
   }
 
+  public updateConfig(config: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool | null): void {
+    if (this.config) {
+      this.config = {
+        ...this.config,
+        ...config,
+      };
+    }
+    if (proxyPool !== undefined) {
+      this.setProxyPool(proxyPool);
+    }
+  }
+
   public async triggerManualScan(
     customConfig?: Partial<TcgMonitorConfig>,
     proxyPool?: ProxyPool

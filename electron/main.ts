@@ -357,6 +357,11 @@ function registerIpcHandlers(): void {
     return tcgDropMonitor.stop();
   });
 
+  ipcMain.handle('tcg-monitor:update-config', async (_, config: Partial<TcgMonitorConfig>, proxyPool?: ProxyPool) => {
+    tcgDropMonitor.updateConfig(config, proxyPool);
+    return true;
+  });
+
   ipcMain.handle('tcg-monitor:get-status', async () => {
     return tcgDropMonitor.getStatus();
   });
