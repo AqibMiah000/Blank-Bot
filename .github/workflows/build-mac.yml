@@ -33,18 +33,8 @@ jobs:
       - name: Build macOS DMG and ZIP
         run: npx electron-builder --mac dmg zip --publish never
 
-      - name: Upload macOS DMG
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.30
-          files: release/*.dmg
+      - name: Upload macOS Assets
+        run: |
+          gh release upload v1.30 release/*.dmg release/*.zip --clobber
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload macOS ZIP
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.30
-          files: release/*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
